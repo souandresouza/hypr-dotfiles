@@ -130,6 +130,15 @@ for dir in "${CONFIG_DIRS[@]}"; do
     fi
 done
 
+copy_user_image() {
+    if [[ -f ~/hypr-dotfiles/assets/user.png ]]; then
+        cp $DOTFILES/assets/user.png "${XDG_DOCUMENTS_DIR:-$HOME/Documentos}/user.png"
+        echo "✅ Imagem copiada com sucesso!"
+    else
+        echo "❌ Imagem não encontrada em $DOTFILES/assets/user.png"
+    fi
+}
+
 # ============================================================================
 # BLOCK 3: SET PERMISSIONS
 # ============================================================================

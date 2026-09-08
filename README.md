@@ -14,6 +14,8 @@
 <!-- TREE_START -->
 ```
 .
+├── assets
+│   └── user.png
 ├── cava
 │   ├── shaders
 │   │   ├── bar_spectrum.frag
