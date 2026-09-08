@@ -113,6 +113,8 @@
 │   └── style.css
 ├── zathura
 │   └── zathurarc
+├── install-hyprland-essentials.sh
+├── install.sh
 ├── LICENSE
 ├── README.md
 └── structure_update.py
