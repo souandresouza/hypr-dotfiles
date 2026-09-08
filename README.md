@@ -46,7 +46,8 @@
 │   ├── scripts
 │   │   ├── hypr-colors.sh
 │   │   ├── hyprkeys.sh
-│   │   └── run-scripts.sh
+│   │   ├── run-scripts.sh
+│   │   └── update-hyprlock.sh
 │   ├── emoji-list.txt
 │   ├── hypridle.conf
 │   ├── hyprland.lua
@@ -66,9 +67,8 @@
 │   │   ├── colors.wt-constants
 │   │   ├── fuzzel-colors.sh
 │   │   ├── kitty-colors.sh
-│   │   ├── swaync-colors.sh
+│   │   ├── mako-colors.sh
 │   │   ├── telegram-colors.sh
-│   │   ├── update-hyprlock.sh
 │   │   ├── waybar-colors.sh
 │   │   └── zathura-colors.sh
 │   ├── album_art.sh

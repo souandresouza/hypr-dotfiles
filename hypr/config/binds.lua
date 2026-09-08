@@ -1,5 +1,6 @@
 local terminal = "kitty"
 local browser = "firefox"
+local menu = "rofi -show drun"
 local launcher = "fuzzel"
 local fileManager = "thunar"
 local restart_waybar = "killall waybar && waybar & "
@@ -8,7 +9,7 @@ local scripts = "$HOME/.config/scripts"
 hl.bind("SUPER + B", hl.dsp.exec_cmd(browser),{ description = "browser" })
 hl.bind("SUPER + E", hl.dsp.exec_cmd(fileManager),{ description = "file manager" })
 hl.bind("SUPER + RETURN", hl.dsp.exec_cmd(terminal),{ description = "terminal" })
-hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(launcher),{ description = "app launcher" })
+hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(menu),{ description = "app menu" })
 
 hl.bind("SUPER + D", hl.dsp.exec_cmd("hyprctl reload"),{ description = "reload hyprland" })
 hl.bind("SUPER + L", hl.dsp.exec_cmd("hyprlock"),{ description = "lock screen" })

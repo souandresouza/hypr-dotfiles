@@ -4,7 +4,7 @@
 WALLPAPER_HISTORY="$HOME/.cache/wallpapers/wallpaper_history.txt"
 # Caminho do arquivo de configuração do hyprlock
 HYPRLOCK_CONF="$HOME/.config/hypr/hyprlock.conf"
-profile="$HOME/Documentos/eu.png"
+profile="$HOME/Documentos/user.png"
 wallpaper="$HOME/.cache/current_wallpaper.png"
 font_family="SquareFont"
 
@@ -42,7 +42,7 @@ cat > "$HYPRLOCK_CONF" << EOF
 
 font_family = $font_family
 wallpaper = "~/.cache/current_wallpaper.png"
-profile = ~/Documentos/eu.png
+profile = ~/Documentos/user.png
 inner_color  = #c8c8c8
 border_color = #111111
 gradient = #30bfee, #01ee8f 45deg
@@ -65,7 +65,7 @@ background {
 # Profile Picture
 image {
     monitor =
-    path = $HOME/Documentos/eu.png
+    path = $HOME/Documentos/user.png
     size = 110
     rounding = 10
     border_size = 4
@@ -80,7 +80,7 @@ image {
 # User Info
 label {
     monitor =
-    text = cmd[update:1000000] /home/andre/.config/scripts/contador_pacotes.sh
+    text = cmd[update:1000000] $HOME/.config/scripts/contador_pacotes.sh
     shadow_boost = 0.5
     shadow_passes = 1
     color =
