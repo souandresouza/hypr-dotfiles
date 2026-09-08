@@ -1,0 +1,256 @@
+[
+  {
+    "name": "topbar",
+    "layer": "top",
+    "position": "top",
+    "height": 20,
+    "mode": "dock",
+    "exclusive": true,
+    "spacing": 0,
+    "passthrough": false,
+    "gtk-layer-shell": true,
+    "reload_style_on_change": true,
+    "modules-left": [
+      "custom/logo",
+      "ext/workspaces",
+      "custom/mpris"
+      //"mpris"
+    ],
+    "modules-center": [
+      "clock",
+      "tray",
+      "idle_inhibitor"
+    ],
+    "modules-right": [
+      "power-profiles-daemon",
+      "bluetooth",
+      "network",
+      "battery"
+    ],
+    "clock": {
+      "format": "{:L%A, %d/%m/%Y - %T}",
+      "timezone": "America/Sao_Paulo",
+      "locale": "pt_BR.UTF-8",
+      "interval": 1,
+      "tooltip-format": "<tt><small>{calendar}</small></tt>",
+      "calendar": {
+      "mode": "month",
+      "mode-mon-col": 3,
+      "on-scroll": 1,
+      "format": {
+      "months": "<span color='#ffead3'><b>{}</b></span>",
+      "today": "<span color='#ff6699'><b><u>{}</u></b></span>"
+      }
+      },
+      "actions": {
+      "on-click-right": "mode",
+      "on-scroll-up": "shift_up",
+      "on-scroll-down": "shift_down"
+      }
+    },
+    "tray": {
+      "icon-size": 14,
+      "spacing": 10,
+    },
+    "custom/logo": {
+      "format": "󰮯 ",
+      "tooltip-format": "Have a nice day!",
+      "tooltip": true,
+      "on-click": "fuzzel"
+      },
+    "power-profiles-daemon": {
+      "format": "{icon} ",
+      "tooltip-format": "Power profile: {profile}\nDriver: {driver}",
+      "tooltip": true,
+      "format-icons": {
+      "performance": "",
+      "balanced": "",
+      "power-saver": "",
+      },
+      },
+    "custom/mpris": {
+      "exec": "python3 -u ~/.config/waybar/scripts/scrolling-mpris.py",
+      "format": "{}",
+      "return-type": "json",
+      "on-click": "playerctl play-pause",
+      "on-scroll-down": "playerctl previous",
+      "on-click-right": "playerctl next"
+
+	  },
+    "idle_inhibitor": {
+      "format": "{status}",
+      "format-icons": {
+        "activated": "✅",
+        "desactivated": "❗"
+      },
+    },
+    "ext/workspaces": {
+      "format": "{name}",
+      "ignore-hidden": true,
+      "on-click": "activate",
+      "on-click-right": "deactivate",
+      "sort-by-id": true,
+      },
+    "network": {
+      "interface": "wlan0",
+      "format": "{ifname}" ,
+      "format-wifi": "{essid} ({signalStrength}%) " ,
+      "format-ethernet": "{ipaddr}/{cidr} ",
+      "format-disconnected": "Disconnected ⚠",
+      "max-length": 50
+      },
+    "battery": {
+      "states": {
+      "warning": 30,
+      "critical": 15
+      },
+      "format": "{capacity}% {icon}",
+      "format-charging": "{capacity}% ⚡",
+      "format-plugged": "{capacity}% 🔌",
+      "format-alt": "{time} {icon}",
+      "format-icons": ["", "", "", "", ""]
+    },
+    "mpris": {
+      "format": "{player_icon} {dynamic}",
+      "format-paused": "{status_icon} <i>{dynamic}</i>",
+      "max-length": 30,
+      "player-icons": {
+        "default": "󰎆 ",
+        "cmus": "",
+        "mpv": "🎵",
+        "vlc": "🎬",
+        "spotify": " ",
+      },
+      "status-icons": {
+        "paused": "⏸",
+      },
+      "on-click": "playerctl play-pause",
+      "on-click-right": "playerctl next",
+      "smooth-scrolling-threshold": 10,
+      "on-scroll-down": "playerctl previous",
+      // "ignored-players": ["cmus", "spotify"]
+    },
+    "bluetooth": {
+      "format": " {status} {num_connections}",
+      "format-off": "󰂲 OFF",
+      "format-disabled": "󰂲 {status}",
+      "format-connected": "󰂱 {num_connections}",
+      "tooltip-format": "Devices connected: {num_connections}",
+      "on-click": "omarchy-launch-bluetooth"
+    },
+    // Custom
+  },
+  {
+    "name": "bottombar",
+    "layer": "top",
+    "position": "bottom",
+    "mode": "dock",
+    "height": 20,
+    "exclusive": true,
+    "spacing": 0,
+    "passthrough": false,
+    "gtk-layer-shell": true,
+    "reload_style_on_change": true,
+    "modules-left": [
+      "wlr/taskbar",
+      "custom/weather"
+    ],
+    "modules-center": [
+      "backlight",
+      "wireplumber",
+      "mango/layout",
+      "custom/recorder"
+    ],
+    "modules-right": [
+      "cpu",
+      "memory",
+      "temperature",
+    ],
+    "wlr/taskbar": {
+        "format": "{icon} {count}",
+        "icon-size": 14
+    },
+    "custom/weather": {
+      "format": "{}",
+      "interval": 1800,
+      "exec": "~/.config/waybar/scripts/weather.sh"
+      },
+    "custom/recorder": {
+      "format": " ",
+      "on-click": "$HOME/.config/scripts/screen_recorder.sh",
+      "tooltip": true,
+      "tooltip-format": "Stop recording"
+      },
+    "mango/layout": {
+      "format": "{}",
+      "format-S": "Scroller",
+      "format-T": "Tile",
+      "format-G": "Grid",
+      "format-M": "Monocle",
+      "format-DW": "Dwindle",
+      "format-F": "Fair",
+      "format-VF": "Vertical Fair",
+      "format-CT": "Center Tile",
+      "format-RT": "Right Tile",
+      "format-VS": "Vertical Scroller",
+      "format-VT": "Vertical Tile",
+      "format-VG": "Vertical Grid",
+      "format-K": "Deck",
+      "format-VK": "Vertical Deck",
+      },
+    "cpu": {
+      "interval": 10,
+      "format": "{usage}% ",
+      "max-length": 10
+      },
+    "wireplumber": {
+      "format": "{icon} {volume}%",
+      "format-muted": " Muted",
+      // "format-muted": " {format_source}",
+      // "format-source": "{source_volume}% ",
+      // "format-source-muted": " ",
+      "format-icons": [
+        " ",
+        " ",
+        " "
+      ],
+      "scroll-step": 0.2,
+      "max-volume": 100,
+      "on-click": "pavucontrol",
+      "on-click-right": "qpwgraph",
+    },
+    "backlight": {
+      "device": "intel_backlight",
+      "rotate": 0,
+      "format": "{icon} {percent}%",
+      "tooltip-format": "🌕 {percent}%",
+      "format-icons": [
+      "󰃜",
+      "󰃝",
+      "󰃞",
+      "󰃟",
+      "󰃠"
+      ]
+     },
+    "temperature": {
+      // "thermal-zone": 2,
+      // "hwmon-path": "/sys/class/hwmon/hwmon2/temp1_input",
+      "critical-threshold": 80,
+      // "format-critical": "{temperatureC}°C {icon}",
+      "format": "{icon} {temperatureC}°C" ,
+      "format-alt": "{temperatureF}°F {icon}",
+      "format-icons": [
+        "",
+        "",
+        ""
+      ],
+      "tooltip": false,
+    },
+    "memory": {
+      "interval": 30,
+      "format": "  {percentage}%" ,
+      "format-alt": "  {used:0.1f}GB / {total:0.1f}GB",
+      "tooltip": true
+    },
+  },
+]

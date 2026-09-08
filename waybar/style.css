@@ -1,0 +1,241 @@
+@import '/home/andre/.config/waybar/colors-waybar.css';
+* {
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+window#waybar {
+    background-color: transparent;
+}
+
+window#waybar.empty #window {
+    background-color: transparent;
+}
+
+#workspaces button {
+    all: initial;
+    padding: 0 6px;
+    color: white;
+    background: @background;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px dashed @foreground;
+    opacity: 0.55;
+}
+#workspaces button.active {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+#workspaces button.empty {
+    color: @foreground;
+    background: @background;
+    opacity: 0.35;
+}
+#workspaces button.empty.active {
+    color: @foreground;
+    background-color: transparent;
+    opacity: 1;
+}
+
+#workspaces button.urgent {
+    background-color: red;
+    color: white;
+}
+
+#tray {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#idle_inhibitor {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#custom-sep {
+    color: @color13;
+}
+
+#clock {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#custom-weather {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#taskbar {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#battery {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#battery.critical:not(.charging) {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#bluetooth {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#bluetooth.disconnected {
+    background: @foreground;
+    color: @background;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px dashed @background;
+    opacity: 1;
+}
+
+#backlight {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#wireplumber {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#memory {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#cpu {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#network {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#network.disconnected {
+    background: @foreground;
+    color: @background;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px dashed @background;
+    opacity: 1;
+}
+
+#temperature {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#layout {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#custom-mpris {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#power-profiles-daemon {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#custom-recorder {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
+
+#custom-logo {
+    background: @background;
+    color: @foreground;
+    margin: 0px 2px;
+    border-radius: 2px;
+    border: 2px solid @foreground;
+    opacity: 1;
+}
