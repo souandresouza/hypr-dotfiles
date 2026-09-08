@@ -1,0 +1,2 @@
+# hypr-dotfiles
+hyprland dotfiles
