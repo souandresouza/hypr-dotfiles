@@ -119,7 +119,6 @@
 ├── lista_aur.txt
 ├── lista_pacman.txt
 ├── README.md
-├── structure_update.py
-└── .zshrc
+└── structure_update.py
 ```
 <!-- TREE_END -->
