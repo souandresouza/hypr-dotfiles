@@ -31,18 +31,27 @@ fi
 # ============================================================================
 
 mkdir -p "$HOME/.config"
-mkdir -p "$HOME/.config/cava"
-mkdir -p "$HOME/.config/fastfetch"
-mkdir -p "$HOME/.config/fuzzel"
-mkdir -p "$HOME/.config/hypr"
-mkdir -p "$HOME/.config/kitty"
-mkdir -p "$HOME/.config/music-tui"
-mkdir -p "$HOME/.config/scripts"
-mkdir -p "$HOME/.config/swaync"
-mkdir -p "$HOME/.config/wallpapers"
-mkdir -p "$HOME/.config/waybar"
-mkdir -p "$HOME/.config/zathura"
 
-log_ok "Todos diretórios necessários criados."
+# ============================================================================
+# BLOCK 3: Copiar para diretórios
+# ============================================================================
+DOTFILES="$HOME/hypr-dotfiles"
 
+cp -r "$DOTFILES/cava" ~/.config
+cp -r "$DOTFILES/fastfetch" ~/.config
+cp -r "$DOTFILES/fuzzel" ~/.config
+cp -r "$DOTFILES/hypr" ~/.config
+cp -r "$DOTFILES/kitty" ~/.config
+cp -r "$DOTFILES/music-tui" ~/.config
+cp -r "$DOTFILES/scripts" ~/.config
+cp -r "$DOTFILES/swaync" ~/.config
+cp -r "$DOTFILES/wallpapers" ~/.config
+cp -r "$DOTFILES/waybar" ~/.config
+cp -r "$DOTFILES/zathura" ~/.config
+
+chmod +x $HOME/.config/scripts/*.sh
+chmod +x $HOME/.config/scripts/colors/*.sh
+chmod +x $HOME/.config/hypr/scripts/*.sh
+chmod +x $HOME/.config/waybar/scripts/*.sh
+chmod +x $HOME/.config/waybar/scripts/*.py
 chmod +x $HOME/hypr-dotfiles/install-hyprland-essentials.sh
