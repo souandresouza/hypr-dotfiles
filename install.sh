@@ -119,7 +119,7 @@ mkdir -p "$HOME/.config"
 
 # Copy configurations
 log_info "Copying configurations..."
-CONFIG_DIRS=(cava fastfetch fuzzel hypr kitty music-tui scripts swaync wallpapers waybar zathura)
+CONFIG_DIRS=(cava fastfetch fuzzel hypr kitty music-tui scripts mako wallpapers waybar zathura)
 
 for dir in "${CONFIG_DIRS[@]}"; do
     if [[ -d "$DOTFILES/$dir" ]]; then
