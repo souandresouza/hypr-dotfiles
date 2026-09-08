@@ -19,10 +19,10 @@ hl.bind("SUPER + X", hl.dsp.exec_cmd("kitty -e scrcpy"),{ description = "scrcpy"
 hl.bind("SUPER + Y", hl.dsp.exec_cmd("kitty --class elio -e elio"),{ description = "elio" })
 hl.bind("SUPER + P", hl.dsp.exec_cmd("kitty -e nmtui"),{ description = "nmtui" })
 hl.bind("SUPER + SHIFT + A", hl.dsp.exec_cmd("kitty -e bluetui"),{ description = "bluetui" })
-hl.bind("SUPER + O", hl.dsp.exec_cmd("wineserver -k"),{ description = "close wine" })
+hl.bind("SUPER + O", hl.dsp.exec_cmd("wineserver -k"), { description = "close wine" })
 
 hl.bind("SUPER + C", hl.dsp.exec_cmd(scripts .. "/hyprpicker.sh -hex"),{ description = "hyprpicker" })
-hl.bind("SUPER + G", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/run-scripts.sh"))
+hl.bind("SUPER + G", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/run-scripts.sh"),{ description = "executa scripts listados" })
 hl.bind("SUPER + A", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/hyprkeys.sh"),{ description = "show binds" })
 hl.bind("SUPER + I", hl.dsp.exec_cmd(scripts .. "/converter_imagens.sh"),{ description = "image format conversor" })
 hl.bind("SUPER + J", hl.dsp.exec_cmd(scripts .. "/extract_frames.sh"),{ description = "frames extractor" })
