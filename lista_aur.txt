@@ -1,8 +1,4 @@
 elio
-mangowm-git
-mpvpaper
 python-pywal
 wal-telegram-git
-waypaper
-yay-bin
-yay-bin-debug
+waybar-git
