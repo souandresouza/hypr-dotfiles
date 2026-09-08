@@ -25,9 +25,11 @@ brightnessctl
 btop
 cabextract
 cantarell-fonts
+catfish
 cava
 chafa
 cliphist
+cmake
 cpupower
 cronie
 ddcutil
@@ -52,6 +54,9 @@ galculator
 gammastep
 geoclue
 gimp
+git
+git-credential-oauth
+github-cli
 glances
 gpart
 gparted
@@ -61,6 +66,7 @@ gst-plugin-pipewire
 gst-plugins-bad
 gst-plugins-ugly
 gst-plugin-va
+gvfs
 gvfs-mtp
 gvfs-nfs
 gvfs-smb
@@ -69,6 +75,7 @@ hwdetect
 hwinfo
 hypridle
 hyprland
+hyprland-protocols
 hyprlock
 hyprpaper
 hyprpicker
@@ -90,11 +97,11 @@ linux-firmware
 linux-zen
 lsb-release
 lsscsi
+ly
 materia-gtk-theme
 mesa-utils
 mkinitcpio
 modemmanager
-mpv
 mtools
 nano
 nano-syntax-highlighting
@@ -136,7 +143,6 @@ rsync
 satty
 scrcpy
 sddm
-seatd
 sg3_utils
 smartmontools
 sof-firmware
@@ -177,7 +183,6 @@ vulkan-intel
 vulkan-nouveau
 vulkan-radeon
 waybar
-wayland-protocols
 wget
 wireplumber
 wl-clip-persist
@@ -187,16 +192,16 @@ wpa_supplicant
 xdg-desktop-portal-gnome
 xdg-desktop-portal-hyprland
 xdg-desktop-portal-wlr
-xdg-utils
+xdg-user-dirs
 xf86-video-amdgpu
 xf86-video-ati
 xf86-video-nouveau
 xfsprogs
 xl2tpd
 xorg-xhost
-xorg-xwayland
 xsettingsd
 xwayland-satellite
+yazi
 yt-dlp
 zathura-pdf-mupdf
 zed

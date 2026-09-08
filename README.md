@@ -113,6 +113,8 @@
 │   └── style.css
 ├── zathura
 │   └── zathurarc
+├── install_aur.sh
+├── install_pacman.sh
 ├── install.sh
 ├── LICENSE
 ├── lista_aur.txt

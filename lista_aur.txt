@@ -4,5 +4,5 @@ mpvpaper
 python-pywal
 wal-telegram-git
 waypaper
-yay
-yay-debug
+yay-bin
+yay-bin-debug

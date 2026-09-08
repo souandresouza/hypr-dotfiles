@@ -73,132 +73,9 @@ else
 fi
 
 # ============================================================================
-# BLOCK 2: INSTALL HYPRLAND ESSENTIALS
+# BLOCK 2: COPY DOTFILES
 # ============================================================================
-step_title "2 - INSTALL HYPRLAND ESSENTIALS"
-
-log_info "Detecting available network manager..."
-
-# Detect network manager
-NETWORK_PACKAGES=()
-NETWORK_SERVICE=""
-if command -v NetworkManager >/dev/null 2>&1; then
-    NETWORK_PACKAGES=(networkmanager network-manager-applet)
-    NETWORK_SERVICE="NetworkManager"
-    log_ok "NetworkManager detected"
-elif command -v iwd >/dev/null 2>&1; then
-    NETWORK_PACKAGES=(iwd)
-    NETWORK_SERVICE="iwd"
-    log_ok "iwd detected"
-else
-    log_info "No network manager detected. Installing NetworkManager..."
-    NETWORK_PACKAGES=(networkmanager network-manager-applet)
-    NETWORK_SERVICE="NetworkManager"
-fi
-
-pkglist_pacman="$HOME/hypr-dotfiles/lista_pacman.txt"
-  if [ -f "$pkglist_pacman" ]; then
-    printf "[+] Installing packages from list...\n"
-    xargs sudo pacman -S --needed --answerclean None --answerdiff None --noconfirm \
-      < "$pkglist_pacman"
-  fi
-
-pkglist="$HOME/hypr-dotfiles/lista_aur.txt"
-  if [ -f "$pkglist" ]; then
-    printf "[+] Installing packages from list...\n"
-    xargs yay -S --needed --answerclean None --answerdiff None --noconfirm \
-      < "$pkglist"
-  fi
-
-# ============================================================================
-# BLOCK 3: ENABLE SERVICES
-# ============================================================================
-step_title "3 - ENABLE SERVICES"
-
-# Network
-if [[ -n "$NETWORK_SERVICE" ]]; then
-    sudo systemctl enable --now "$NETWORK_SERVICE" 2>/dev/null
-    log_ok "$NETWORK_SERVICE enabled"
-fi
-
-# Bluetooth
-if pacman -Q bluez >/dev/null 2>&1; then
-    sudo systemctl enable --now bluetooth 2>/dev/null
-    log_ok "Bluetooth enabled"
-fi
-
-# Seatd
-if pacman -Q seatd >/dev/null 2>&1; then
-    sudo systemctl enable --now seatd 2>/dev/null
-    sudo usermod -aG seat "$USER" 2>/dev/null
-    log_ok "Seatd enabled and user added to 'seat' group"
-fi
-
-# PipeWire (user services)
-if pacman -Q pipewire >/dev/null 2>&1; then
-    systemctl --user enable --now pipewire pipewire-pulse wireplumber 2>/dev/null
-    log_ok "PipeWire/WirePlumber enabled for user"
-fi
-
-# SDDM
-if pacman -Q sddm >/dev/null 2>&1; then
-    sudo systemctl enable sddm 2>/dev/null
-    log_ok "SDDM enabled (will start on next boot)"
-fi
-
-# ============================================================================
-# BLOCK 4: CONFIGURE SDDM (sem autologin + NumLock)
-# ============================================================================
-step_title "4 - CONFIGURE SDDM"
-
-if pacman -Q sddm >/dev/null 2>&1; then
-    log_info "Configuring SDDM..."
-
-    # Create SDDM config directory
-    sudo mkdir -p /etc/sddm.conf.d
-
-    # Create SDDM config (sem autologin, com NumLock ativo)
-    sudo tee /etc/sddm.conf.d/hyprland.conf > /dev/null <<EOF
-[General]
-HaltCommand=/usr/bin/systemctl poweroff
-RebootCommand=/usr/bin/systemctl reboot
-Numlock=on
-
-[Theme]
-Current=breeze
-
-[Users]
-MaximumUid=65000
-MinimumUid=1000
-
-[Autologin]
-# Autologin desabilitado
-Session=
-User=
-EOF
-
-    log_ok "SDDM configured with NumLock ON (autologin disabled)"
-
-    # Create hyprland desktop entry if not exists
-    if [[ ! -f /usr/share/wayland-sessions/hyprland.desktop ]]; then
-        log_info "Creating Hyprland desktop entry for SDDM..."
-        sudo tee /usr/share/wayland-sessions/hyprland.desktop > /dev/null <<EOF
-[Desktop Entry]
-Name=Hyprland
-Comment=An intelligent dynamic tiling Wayland compositor
-Exec=Hyprland
-Type=Application
-EOF
-        log_ok "Hyprland desktop entry created"
-    fi
-else
-    log_warn "SDDM not installed. Skipping configuration."
-fi
-
-# ============================================================================
-# BLOCK 5: COPY DOTFILES
-# ============================================================================
-step_title "5 - COPY DOTFILES"
+step_title "2 - COPY DOTFILES"
 
 DOTFILES="$HOME/hypr-dotfiles"
 
@@ -232,9 +109,9 @@ for dir in "${CONFIG_DIRS[@]}"; do
 done
 
 # ============================================================================
-# BLOCK 6: SET PERMISSIONS
+# BLOCK 3: SET PERMISSIONS
 # ============================================================================
-step_title "6 - SET PERMISSIONS"
+step_title "3 - SET PERMISSIONS"
 
 log_info "Setting executable permissions..."
 
@@ -244,34 +121,5 @@ chmod +x "$HOME/.config/scripts/colors"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/hypr/scripts"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/waybar/scripts"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/waybar/scripts"/*.py 2>/dev/null || true
-chmod +x "$DOTFILES/install-hyprland-essentials.sh" 2>/dev/null || true
 
 log_ok "Permissions set"
-
-# ============================================================================
-# FINALIZATION
-# ============================================================================
-step_title "INSTALLATION COMPLETE!"
-
-log_ok "Hyprland with all essentials has been installed!"
-log_info "Configuration files copied to ~/.config/"
-log_info "User '$USER' added to 'seat' group (requires logout/login)"
-log_info "pywal installed and ready to use"
-log_info "SDDM configured with NumLock ON (autologin disabled)"
-
-read -rp "Do you want to reboot now ? (y/n) " status
-
-if [[ "$status" == "y" ]]; then
-  printf "Rebooting in 3 seconds\n"
-  sleep 3
-
-  if [[ "$init" == "systemd" ]]; then
-    systemctl reboot
-  else
-    sudo reboot
-  fi
-
-else
-  printf "That's okay"
-
-fi
