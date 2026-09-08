@@ -24,7 +24,6 @@ brightnessctl
 btop
 cabextract
 cantarell-fonts
-catfish
 cava
 chafa
 cliphist
@@ -95,6 +94,7 @@ linux-firmware
 linux-zen
 lsb-release
 lsscsi
+mako
 materia-gtk-theme
 mesa-utils
 mkinitcpio
@@ -146,7 +146,6 @@ speech-dispatcher
 steam
 sudo
 swaybg
-swaync
 telegram-desktop
 thunar
 thunar-archive-plugin
@@ -182,7 +181,6 @@ wireplumber
 wl-clip-persist
 wlsunset
 wpa_supplicant
-xdg-desktop-portal-gnome
 xdg-desktop-portal-hyprland
 xdg-user-dirs
 xf86-video-amdgpu
@@ -192,7 +190,6 @@ xfsprogs
 xl2tpd
 xorg-xhost
 xsettingsd
-yazi
 yt-dlp
 zathura-pdf-mupdf
 zed

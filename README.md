@@ -56,6 +56,8 @@
 ├── kitty
 │   ├── colors-kitty.conf
 │   └── kitty.conf
+├── mako
+│   └── config
 ├── music-tui
 │   └── config.toml
 ├── scripts
@@ -94,9 +96,6 @@
 │   ├── take-screenshot.sh
 │   ├── wlsunset.sh
 │   └── year-progress.sh
-├── swaync
-│   ├── config.json
-│   └── style.css
 ├── wallpapers
 │   ├── 9088f95a-6f39-4565-ad55-8ee3ea373cc6_0.png
 │   ├── 9ee753d2-06b6-4795-a81e-bc3f729a62b7_0.png
