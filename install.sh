@@ -96,78 +96,19 @@ else
     NETWORK_SERVICE="NetworkManager"
 fi
 
-# Essential packages (official repos)
-ESSENTIALS=(
-    hyprland
-    hypridle
-    hyprlock
-    hyprpaper
-    hyprpicker
-    wayland-protocols
-    xorg-xwayland
-    xdg-desktop-portal-hyprland
-    seatd
-    polkit-kde-agent
-    pipewire
-    pipewire-pulse
-    wireplumber
-    waybar
-    fuzzel
-    swaybg
-    swaync
-    wl-clip-persist
-    xsettingsd
-    brightnessctl
-    bluez
-    blueman
-    ttf-jetbrains-mono-nerd
-    pavucontrol
-    cava
-    fastfetch
-    kitty
-    zathura
-    zathura-pdf-mupdf
-    mpv
-    yt-dlp
-    btop
-    nano
-    tree
-    wget
-    unzip
-    unrar
-    jq
-    python-pywal
-    sddm
-)
+pkglist_pacman="$HOME/hypr-dotfiles/lista_pacman.txt"
+  if [ -f "$pkglist_pacman" ]; then
+    printf "[+] Installing packages from list...\n"
+    xargs sudo pacman -S --needed --answerclean None --answerdiff None --noconfirm \
+      < "$pkglist_pacman"
+  fi
 
-# AUR packages
-AUR_PACKAGES=(
-    wal-telegram-git
-)
-
-# Merge packages
-PACKAGES=("${ESSENTIALS[@]}" "${NETWORK_PACKAGES[@]}")
-
-log_info "Packages to install from official repos:"
-printf "  %s\n" "${PACKAGES[@]}"
-echo ""
-log_info "Packages to install from AUR:"
-printf "  %s\n" "${AUR_PACKAGES[@]}"
-echo ""
-
-if ask_yes_no "===> Proceed with installation?"; then
-    # Install official packages
-    log_info "Installing packages from official repos..."
-    sudo pacman -S --needed "${PACKAGES[@]}"
-    log_ok "Official packages installed successfully."
-
-    # Install AUR packages
-    log_info "Installing packages from AUR..."
-    yay -S --needed "${AUR_PACKAGES[@]}"
-    log_ok "AUR packages installed successfully."
-else
-    log_warn "Package installation skipped."
-fi
+pkglist="$HOME/hypr-dotfiles/lista_aur.txt"
+  if [ -f "$pkglist" ]; then
+    printf "[+] Installing packages from list...\n"
+    xargs yay -S --needed --answerclean None --answerdiff None --noconfirm \
+      < "$pkglist"
+  fi
 
 # ============================================================================
 # BLOCK 3: ENABLE SERVICES
@@ -308,79 +249,6 @@ chmod +x "$DOTFILES/install-hyprland-essentials.sh" 2>/dev/null || true
 log_ok "Permissions set"
 
 # ============================================================================
-# BLOCK 7: OPTIONAL PACKAGES
-# ============================================================================
-step_title "7 - OPTIONAL PACKAGES"
-
-if ask_yes_no "===> Install optional packages (browsers, file manager, etc.)?"; then
-    echo ""
-    echo "1) Browsers (Firefox + LibreWolf)"
-    echo "2) Terminals (Alacritty + Kitty)"
-    echo "3) Utilities (Thunar, MPV, VLC, GIMP)"
-    echo "4) SDDM Themes (sddm-archlinux-theme-git from AUR)"
-    echo "5) All of the above"
-    echo "6) None"
-    read -p "Choose an option (1-6): " OPTION
-
-    case $OPTION in
-        1)
-            sudo pacman -S --needed firefox librewolf
-            log_ok "Browsers installed"
-            ;;
-        2)
-            sudo pacman -S --needed alacritty kitty
-            log_ok "Terminals installed"
-            ;;
-        3)
-            sudo pacman -S --needed thunar thunar-archive-plugin tumbler mpv vlc gimp
-            log_ok "Utilities installed"
-            ;;
-        4)
-            yay -S --needed sddm-archlinux-theme-git
-            log_ok "SDDM themes installed"
-            log_info "To change theme: edit /etc/sddm.conf.d/hyprland.conf and set Theme=archlinux-sddm-theme"
-            ;;
-        5)
-            sudo pacman -S --needed firefox librewolf alacritty kitty thunar thunar-archive-plugin tumbler mpv vlc gimp
-            yay -S --needed sddm-archlinux-theme-git
-            log_ok "All optional packages installed"
-            log_info "To change SDDM theme: edit /etc/sddm.conf.d/hyprland.conf and set Theme=archlinux-sddm-theme"
-            ;;
-        6)
-            log_info "No optional packages installed"
-            ;;
-        *)
-            log_warn "Invalid option. Skipping optional packages."
-            ;;
-    esac
-fi
-
-# ============================================================================
-# BLOCK 8: WAL SETUP (pywal)
-# ============================================================================
-step_title "8 - WAL SETUP"
-
-if command -v wal >/dev/null 2>&1; then
-    log_info "pywal detected. Generating initial color scheme..."
-
-    # Check if wallpapers directory exists
-    if [[ -d "$HOME/.config/wallpapers" ]]; then
-        # Get first wallpaper
-        WALLPAPER=$(find "$HOME/.config/wallpapers" -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.gif" \) | head -n 1)
-        if [[ -n "$WALLPAPER" ]]; then
-            wal -i "$WALLPAPER" -n
-            log_ok "Color scheme generated from $WALLPAPER"
-        else
-            log_warn "No wallpapers found in ~/.config/wallpapers"
-        fi
-    else
-        log_warn "Wallpapers directory not found"
-    fi
-else
-    log_warn "pywal not installed. Skipping color generation."
-fi
-
-# ============================================================================
 # FINALIZATION
 # ============================================================================
 step_title "INSTALLATION COMPLETE!"
@@ -391,24 +259,19 @@ log_info "User '$USER' added to 'seat' group (requires logout/login)"
 log_info "pywal installed and ready to use"
 log_info "SDDM configured with NumLock ON (autologin disabled)"
 
-echo ""
-echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${GREEN}✓ Hyprland installation completed successfully${NC}"
-echo -e "${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo ""
-echo -e "${BLUE}NEXT STEPS:${NC}"
-echo "  1. ${YELLOW}Reboot your system${NC} - SDDM will start automatically"
-echo "  2. ${YELLOW}Login${NC} with your user and password"
-echo "  3. ${YELLOW}Select Hyprland${NC} session and login"
-echo ""
-echo -e "${BLUE}SDDM INFO:${NC}"
-echo "  - Config file: /etc/sddm.conf.d/hyprland.conf"
-echo "  - NumLock is ${GREEN}ON${NC} by default"
-echo "  - Autologin is ${YELLOW}disabled${NC}"
-echo "  - To change theme: Install sddm-archlinux-theme-git and edit config"
-echo ""
-echo -e "${BLUE}PYWAL INFO:${NC}"
-echo "  - Run 'wal -i /path/to/wallpaper' to generate new colors"
-echo "  - Telegram already has wal-telegram-git integration"
-echo ""
-echo -e "${YELLOW}Enjoy your new Hyprland setup! 🚀${NC}"
+read -rp "Do you want to reboot now ? (y/n) " status
+
+if [[ "$status" == "y" ]]; then
+  printf "Rebooting in 3 seconds\n"
+  sleep 3
+
+  if [[ "$init" == "systemd" ]]; then
+    systemctl reboot
+  else
+    sudo reboot
+  fi
+
+else
+  printf "That's okay"
+
+fi
