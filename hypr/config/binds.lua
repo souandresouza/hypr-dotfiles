@@ -1,9 +1,7 @@
 local terminal = "kitty"
 local browser = "firefox"
-local menu = "rofi -show drun"
 local launcher = "fuzzel"
 local fileManager = "thunar"
-local restart_waybar = "killall waybar && waybar & "
 local scripts = "$HOME/.config/scripts"
 
 hl.bind("SUPER + B", hl.dsp.exec_cmd(browser),{ description = "browser" })
@@ -35,7 +33,7 @@ hl.bind("SUPER + S", hl.dsp.exec_cmd(scripts .. "/calendar.sh"),{ description = 
 hl.bind("SUPER + H", hl.dsp.exec_cmd(scripts .. "/random-wallpaper.sh"),{ description = "change wallpaper" })
 hl.bind("SUPER + Z", hl.dsp.exec_cmd(scripts .. "/take-screenshot.sh"),{ description = "capture with satty" })
 hl.bind("SUPER + V", hl.dsp.exec_cmd(scripts .. "/clipboard_toggle.sh"),{ description = "clipboard" })
-hl.bind("SUPER + SHIFT + G", hl.dsp.exec_cmd(scripts .. "/screenrecord.sh"),{ description = "screen recorder" })
+hl.bind("SUPER + SHIFT + G", hl.dsp.exec_cmd(scripts .. "/screen_recorder.sh"),{ description = "screen recorder" })
 hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd(scripts .. "/dashboard_toggle.sh"),{ description = "dashboard info" })
 
 hl.bind("SUPER + SHIFT + J", hl.dsp.window.fullscreen({ mode = "fullscreen" }),{ description = "window fullscreen" })

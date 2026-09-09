@@ -87,6 +87,7 @@
 │   ├── exit-menu.sh
 │   ├── extract_frames.sh
 │   ├── hyprpicker.sh
+│   ├── media-notify.sh
 │   ├── music-progress.sh
 │   ├── powermenu.sh
 │   ├── qr.sh
@@ -99,11 +100,6 @@
 │   ├── wlsunset.sh
 │   └── year-progress.sh
 ├── wallpapers
-│   ├── 9088f95a-6f39-4565-ad55-8ee3ea373cc6_0.png
-│   ├── 9ee753d2-06b6-4795-a81e-bc3f729a62b7_0.png
-│   ├── leaves.png
-│   ├── vintage-ascent.png
-│   ├── wall-13.png
 │   └── wallpaper_5.png
 ├── waybar
 │   ├── scripts
@@ -114,6 +110,7 @@
 │   └── style.css
 ├── zathura
 │   └── zathurarc
+├── .gitignore
 ├── install_aur.sh
 ├── install_pacman.sh
 ├── install.sh

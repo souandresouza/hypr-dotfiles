@@ -124,6 +124,7 @@ pipewire-alsa
 pipewire-jack
 pipewire-pulse
 pkgfile
+playerctl
 plocate
 polkit-kde-agent
 power-profiles-daemon

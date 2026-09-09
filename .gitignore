@@ -1,0 +1,11 @@
+# Sistema / editor
+.DS_Store
+*.swp
+*~
+
+# Python
+__pycache__/
+*.pyc
+
+# Caches
+.cache/

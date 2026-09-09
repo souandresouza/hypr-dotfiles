@@ -4,5 +4,3 @@ python-pywal
 wal-telegram-git
 waybar-git
 waypaper
-yay-bin
-yay-bin-debug
