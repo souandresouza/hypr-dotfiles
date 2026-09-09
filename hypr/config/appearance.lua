@@ -1,4 +1,7 @@
-local palette = require("config.colors")
+local palette = {
+    active_border = "rgba(#e7dac6ee)",
+    inactive_border = "rgba(#101011aa)",
+}
 local gaps = 6
 local colors = {
     background = palette.inactive_border,
