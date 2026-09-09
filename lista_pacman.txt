@@ -32,6 +32,7 @@ cpupower
 cronie
 ddcutil
 dmidecode
+dms-shell
 dnsmasq
 duf
 efibootmgr
@@ -96,6 +97,7 @@ lsb-release
 lsscsi
 mako
 materia-gtk-theme
+matugen
 mesa-utils
 mkinitcpio
 modemmanager
@@ -132,6 +134,7 @@ pv
 python-pipx
 python-requests
 qbittorrent
+quickshell
 realtime-privileges
 rebuild-detector
 reflector
