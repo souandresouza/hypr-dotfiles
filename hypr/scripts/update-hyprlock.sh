@@ -32,13 +32,13 @@ fi
 # Cria o diretório de configuração do hyprlock se não existir
 mkdir -p "$(dirname "$HYPRLOCK_CONF")"
 
-# Gera o arquivo hyprlock.conf
+# Gera o arquivo hyprlock.conf (portável: sem caminhos/users absolutos fixos.
+# Os \$ ficam literais no arquivo para serem expandidos na hora do lock)
 cat > "$HYPRLOCK_CONF" << EOF
 # ==============================================================================
-# Gerado em $(date)
+# hyprlock.conf — portável (funciona em qualquer máquina)
+# Configuração gerada por hypr/scripts/update-hyprlock.sh
 # ==============================================================================
-# Configuração gerada automaticamente
-# Wallpaper atual: $WALLPAPER_PATH
 
 font_family = $font_family
 wallpaper = "~/.cache/current_wallpaper.png"
@@ -56,7 +56,7 @@ general {
 # Background
 background {
     monitor =
-    path = $wallpaper
+    path = ~/.cache/current_wallpaper.png
     brightness = 0.5
     blur_passes = 2 # 0 disables blurring
     blur_size = 7
@@ -65,11 +65,11 @@ background {
 # Profile Picture
 image {
     monitor =
-    path = $HOME/Documentos/user.png
+    path = ~/Documentos/user.png
     size = 110
     rounding = 10
     border_size = 4
-    border_color = $inner_color
+    border_color = 
 
     position = 20, -20
     halign = left
@@ -80,7 +80,7 @@ image {
 # User Info
 label {
     monitor =
-    text = cmd[update:1000000] $HOME/.config/scripts/contador-pacotes.sh
+    text = cmd[update:1000000] \$HOME/.config/scripts/contador-pacotes.sh
     shadow_boost = 0.5
     shadow_passes = 1
     color =
@@ -95,8 +95,8 @@ label {
 # DATE
 label {
     monitor =
-    text = cmd[update:18000000] echo "<b> "$(date +'%A, %-d %B %Y')" </b>"
-    color = $border_color
+    text = cmd[update:18000000] echo "<b> "\$(date +'%A, %-d %B %Y')" </b>"
+    color = 
     font_size = 30
     font_family = $font_family
     position = 0, 200
@@ -108,7 +108,7 @@ label {
 label {
     monitor =
     text = cmd[update:1000] date +"%H:"
-    color = $border_color
+    color = 
     shadow_size = 3
     shadow_color = rgb(0,0,0)
     shadow_boost = 1.2
@@ -124,7 +124,7 @@ label {
 label {
     monitor =
     text = cmd[update:1000] date +"%M:"
-    color = $border_color
+    color = 
     font_size = 200
     font_family = $font_family
     position = 10, -15
@@ -137,7 +137,7 @@ label {
 label {
     monitor =
     text = cmd[update:1000] date +"%S"
-    color = $border_color
+    color = 
     shadow_size = 3
     shadow_color = rgb(0,0,0)
     shadow_boost = 1.2
@@ -158,8 +158,8 @@ input-field {
     dots_spacing = 0.15
     dots_center = true
     dots_rounding = -1
-    outer_color = $gradient
-    inner_color = $inner_color
+    outer_color = 
+    inner_color = 
     font_color = white
     fade_on_empty = true
     fade_timeout = 1000
@@ -168,9 +168,9 @@ input-field {
     rounding = -1
     check_color = blue
     fail_color = red
-    fail_text = <i>$FAIL <b>($ATTEMPTS)</b></i>
+    fail_text = <i> <b>()</b></i>
     fail_transition = 300
-    capslock_color = $border_color
+    capslock_color = 
     numlock_color = -1
     bothlock_color = -1
     invert_numlock = false
@@ -182,8 +182,8 @@ input-field {
 
 label { # Status
     monitor =
-    text = cmd[update:5000] ${XDG_CONFIG_HOME:-$HOME/.config}/scripts/music-progress.sh
-    color = $gradient
+    text = cmd[update:5000] \${XDG_CONFIG_HOME:-\$HOME/.config}/scripts/music-progress.sh
+    color = 
     font_size = 14
     font_family = $font_family
 
@@ -193,8 +193,8 @@ label { # Status
 }
 label { # Status
     monitor =
-    text = cmd[update:86400] ${XDG_CONFIG_HOME:-$HOME/.config}/scripts/year-progress.sh
-    color = $gradient
+    text = cmd[update:86400] \${XDG_CONFIG_HOME:-\$HOME/.config}/scripts/year-progress.sh
+    color = 
     font_size = 14
     font_family = $font_family
 
@@ -204,8 +204,8 @@ label { # Status
 }
 label { # Status
     monitor =
-    text = cmd[update:300] ${XDG_CONFIG_HOME:-$HOME/.config}/scripts/battery-status.sh
-    color = $gradient
+    text = cmd[update:300] \${XDG_CONFIG_HOME:-\$HOME/.config}/scripts/battery-status.sh
+    color = 
     font_size = 14
     font_family = $font_family
 
