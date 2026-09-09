@@ -5,7 +5,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("awww-daemon")
 	hl.exec_cmd("$HOME/.config/scripts/random-wallpaper.sh")
 	hl.exec_cmd("$HOME/.config/hypr/scripts/run-scripts.sh")
-	hl.exec_cmd("$HOME/.config/hypr/scripts/hypr-colors.sh")
+	
 	hl.exec_cmd("$HOME/.config/scripts/battery-tracker.sh")
 	hl.exec_cmd("$HOME/.config/scripts/wlsunset.sh")
 	hl.exec_cmd("$HOME/.config/scripts/media-notify.sh")

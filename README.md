@@ -47,7 +47,6 @@
 │   ├── dms
 │   │   └── colors.lua
 │   ├── scripts
-│   │   ├── hypr-colors.sh
 │   │   ├── hyprkeys.sh
 │   │   ├── run-scripts.sh
 │   │   └── update-hyprlock.sh
