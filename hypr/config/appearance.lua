@@ -1,6 +1,6 @@
 local palette = {
-    active_border = "rgba(#e7dac6ee)",
-    inactive_border = "rgba(#101011aa)",
+    active_border = "rgba(e7dac6ee)",
+    inactive_border = "rgba(101011aa)",
 }
 local gaps = 6
 local colors = {
