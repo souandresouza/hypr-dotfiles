@@ -1,5 +1,5 @@
 #!/bin/bash
-# sequencia.sh -- executa scripts
+# executa scripts de geração de cores
 
 $HOME/.config/scripts/colors/cava-colors.sh
 $HOME/.config/scripts/colors/fuzzel-colors.sh

@@ -41,10 +41,11 @@
 │   │   ├── appearance.lua
 │   │   ├── autostart.lua
 │   │   ├── binds.lua
-│   │   ├── colors.lua
 │   │   ├── env.lua
 │   │   ├── input.lua
 │   │   └── windowrules.lua
+│   ├── dms
+│   │   └── colors.lua
 │   ├── scripts
 │   │   ├── hypr-colors.sh
 │   │   ├── hyprkeys.sh
@@ -73,29 +74,25 @@
 │   │   ├── telegram-colors.sh
 │   │   ├── waybar-colors.sh
 │   │   └── zathura-colors.sh
-│   ├── album_art.sh
-│   ├── auto_detect_terminal.sh
 │   ├── battery-status.sh
-│   ├── battery_tracker.sh
+│   ├── battery-tracker.sh
 │   ├── calendar.sh
 │   ├── clipboard.sh
-│   ├── clipboard_toggle.sh
-│   ├── contador_pacotes.sh
-│   ├── converter_imagens.sh
+│   ├── clipboard-toggle.sh
+│   ├── contador-pacotes.sh
+│   ├── converter-imagens.sh
 │   ├── dashboard.sh
-│   ├── dashboard_toggle.sh
-│   ├── exit-menu.sh
-│   ├── extract_frames.sh
+│   ├── dashboard-toggle.sh
+│   ├── extract-frames.sh
 │   ├── hyprpicker.sh
 │   ├── media-notify.sh
 │   ├── music-progress.sh
 │   ├── powermenu.sh
 │   ├── qr.sh
 │   ├── random-wallpaper.sh
-│   ├── refreshWaybar.sh
-│   ├── screen_recorder.sh
+│   ├── refresh-waybar.sh
+│   ├── screen-recorder.sh
 │   ├── screenshot.sh
-│   ├── sequencia.sh
 │   ├── take-screenshot.sh
 │   ├── wlsunset.sh
 │   └── year-progress.sh

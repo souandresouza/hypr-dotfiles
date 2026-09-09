@@ -177,7 +177,7 @@
       },
     "custom/recorder": {
       "format": " ",
-      "on-click": "$HOME/.config/scripts/screen_recorder.sh",
+      "on-click": "$HOME/.config/scripts/screen-recorder.sh",
       "tooltip": true,
       "tooltip-format": "Stop recording"
       },
