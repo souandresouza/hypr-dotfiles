@@ -10,6 +10,7 @@ Singleton {
 	property Item media: null
 	property Item calendar: null
 	property Item powerMenu: null
+	property Item network: null
 
 	function toggleControl() {
 		const p = popups.controlCenter;
@@ -32,6 +33,26 @@ Singleton {
 
 		function toggle() {
 			popups.toggleControl();
+		}
+	}
+
+	IpcHandler {
+		target: "network"
+
+		function toggle() {
+			const p = popups.network;
+			if (!p)
+				return;
+			if (p.open) {
+				p.closePopup();
+				return;
+			}
+			p.triggerX = Math.max(0, Math.floor((p.screenWidth - p.popupWidthScaled) / 2));
+			p.triggerY = p.maskY;
+			p.triggerWidth = p.popupWidthScaled;
+			p.triggerHeight = 0;
+			p.open = true;
+			p.opened();
 		}
 	}
 }

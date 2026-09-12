@@ -6,6 +6,10 @@ import qs.Widgets
 ModuleButton {
 	id: root
 
+	property var popup: null
+
+	active: popup ? popup.open : false
+
 	readonly property string glyph: {
 		if (NetworkService.state === 1)
 			return "\uf1eb";
@@ -17,8 +21,13 @@ ModuleButton {
 	IconText {
 		glyph: root.glyph
 		text: NetworkService.state === 1 ? NetworkService.ssid : NetworkService.state === 2 ? "eth" : ""
-		glyphColor: NetworkService.state === 0 ? Theme.sage : Theme.fg
+		glyphColor: root.active ? Theme.accent : NetworkService.state === 0 ? Theme.sage : Theme.fg
 		textColor: Theme.fg
 		maxTextWidth: 90
+	}
+
+	onClicked: {
+		if (popup)
+			popup.toggleFrom(root.frame);
 	}
 }

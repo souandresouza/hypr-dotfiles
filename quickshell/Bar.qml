@@ -105,6 +105,7 @@ Item {
 					PowerMenu { popup: powerMenuPopup }
 					Lock {}
 					IdleInhibitor {}
+					Network { popup: networkPopup }
 					ControlCenter { popup: controlCenterPopup }
 					Notifications { popup: notificationsPopup }
 					PowerProfile {}
@@ -143,6 +144,16 @@ Item {
 	}
 
 	PopoutBase {
+		id: networkPopup
+		screen: barRoot.screen
+		popupWidth: 360
+		popupHeight: 640
+		content: Component {
+			NetworkPopup {}
+		}
+	}
+
+	PopoutBase {
 		id: trayPopup
 		screen: barRoot.screen
 		popupWidth: 300
@@ -173,7 +184,7 @@ Item {
 	}
 
 	function closeOtherPopouts(except) {
-		const all = [calendarPopup, mediaPopup, controlCenterPopup, trayPopup, powerMenuPopup, notificationsPopup];
+		const all = [calendarPopup, mediaPopup, controlCenterPopup, networkPopup, trayPopup, powerMenuPopup, notificationsPopup];
 		for (const p of all) {
 			if (p !== except)
 				p.closePopup();
@@ -185,6 +196,7 @@ Item {
 		PopupService.media = mediaPopup;
 		PopupService.calendar = calendarPopup;
 		PopupService.powerMenu = powerMenuPopup;
+		PopupService.network = networkPopup;
 	}
 
 	Connections {
@@ -200,6 +212,11 @@ Item {
 	Connections {
 		target: controlCenterPopup
 		function onOpened() { barRoot.closeOtherPopouts(controlCenterPopup) }
+	}
+
+	Connections {
+		target: networkPopup
+		function onOpened() { barRoot.closeOtherPopouts(networkPopup) }
 	}
 
 	Connections {
