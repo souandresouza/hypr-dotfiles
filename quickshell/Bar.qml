@@ -110,7 +110,6 @@ Item {
 					Notifications { popup: notificationsPopup }
 					PowerProfile {}
 					Battery {}
-					SystemTray { popup: trayPopup }
 			}
 		}
 	}
@@ -154,16 +153,6 @@ Item {
 	}
 
 	PopoutBase {
-		id: trayPopup
-		screen: barRoot.screen
-		popupWidth: 300
-		popupHeight: 320
-		content: Component {
-			TrayPopup {}
-		}
-	}
-
-	PopoutBase {
 		id: notificationsPopup
 		screen: barRoot.screen
 		popupWidth: 380
@@ -184,7 +173,7 @@ Item {
 	}
 
 	function closeOtherPopouts(except) {
-		const all = [calendarPopup, mediaPopup, controlCenterPopup, networkPopup, trayPopup, powerMenuPopup, notificationsPopup];
+		const all = [calendarPopup, mediaPopup, controlCenterPopup, networkPopup, powerMenuPopup, notificationsPopup];
 		for (const p of all) {
 			if (p !== except)
 				p.closePopup();
@@ -217,11 +206,6 @@ Item {
 	Connections {
 		target: networkPopup
 		function onOpened() { barRoot.closeOtherPopouts(networkPopup) }
-	}
-
-	Connections {
-		target: trayPopup
-		function onOpened() { barRoot.closeOtherPopouts(trayPopup) }
 	}
 
 	Connections {
