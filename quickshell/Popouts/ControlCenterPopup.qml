@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import qs.Common
 import qs.Services
 import qs.Widgets
@@ -9,6 +10,77 @@ Item {
 	id: root
 
 	property real sf: 1
+
+	property var netInfo: ({ ssid: "", conn: "", device: "", ip: "", gateway: "", band: "", psk: "" })
+	property string qrSource: ""
+	property bool qrShow: false
+
+	readonly property bool netConnected: root.netInfo.ssid
+		? root.netInfo.ssid.length > 0
+		: false
+
+	function refreshNetInfo() {
+		netInfoProc.exec(["sh", "-c", Theme.binDir + "/wifi.sh info"]);
+	}
+
+	function pinWifiBand(value) {
+		bandPinProc.exec(["sh", "-c", Theme.binDir + "/wifi.sh band " + value]);
+	}
+
+	function showQr() {
+		qrProc.exec(["sh", "-c", Theme.binDir + "/wifi.sh qr"]);
+	}
+
+	Process {
+		id: netInfoProc
+		stdout: StdioCollector {
+			id: netInfoColl
+			waitForEnd: true
+		}
+		onExited: () => {
+			const raw = netInfoColl.text.toString().trim();
+			if (raw.length > 0 && raw.startsWith("{")) {
+				try {
+					root.netInfo = JSON.parse(raw);
+				} catch (e) { /* ignore */ }
+			}
+		}
+	}
+
+	Process {
+		id: bandPinProc
+		stdout: StdioCollector {
+			id: bandPinColl
+			waitForEnd: true
+		}
+		onExited: () => {
+			Qt.callLater(() => root.refreshNetInfo());
+		}
+	}
+
+	Process {
+		id: qrProc
+		stdout: StdioCollector {
+			id: qrColl
+			waitForEnd: true
+		}
+		onExited: () => {
+			const out = qrColl.text.toString().trim();
+			if (out.length > 0 && out.startsWith("/")) {
+				root.qrSource = "file://" + out;
+				root.qrShow = true;
+			}
+		}
+	}
+
+	Timer {
+		interval: 8000
+		running: true
+		repeat: true
+		onTriggered: root.refreshNetInfo()
+	}
+
+	Component.onCompleted: root.refreshNetInfo()
 
 	readonly property string networkGlyph:
 		NetworkService.state === 2 ? "\uf6ff" : NetworkService.state === 1 ? "\uf1eb" : "\uf05aa"
@@ -211,6 +283,147 @@ Item {
 				glyphColor: NetworkService.state === 0 ? Theme.sage : Theme.fg
 				active: NetworkService.wifiEnabled
 				onToggled: NetworkService.toggleWifi()
+			}
+
+			Column {
+				width: parent.width
+				spacing: Theme.roundScaled(6, root.sf)
+				visible: root.netConnected
+
+				Text {
+					width: parent.width
+					text: root.netInfo.ip
+						+ (root.netInfo.gateway ? "   GW " + root.netInfo.gateway : "")
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSizeSmall, root.sf)
+					color: Theme.stone
+					elide: Text.ElideRight
+				}
+
+				RowLayout {
+					width: parent.width
+					spacing: Theme.roundScaled(4, root.sf)
+
+					Text {
+						text: "BANDA"
+						font.family: Theme.fontFamily
+						font.pixelSize: Theme.roundScaled(Theme.fontSizeSmall, root.sf)
+						font.weight: Font.DemiBold
+						color: Theme.sage
+						Layout.alignment: Qt.AlignVCenter
+						Layout.rightMargin: Theme.roundScaled(6, root.sf)
+					}
+
+					ModuleButton {
+						readonly property bool chipActive: root.netInfo.band === "2.4GHz"
+						accentColor: chipActive
+							? Theme.accent
+							: Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.08)
+						height: Theme.roundScaled(24, root.sf)
+						Layout.preferredWidth: Theme.roundScaled(40, root.sf)
+						contentCentered: true
+						IconText {
+							text: "2.4"
+							fontSize: Theme.fontSizeSmall
+							textColor: Theme.fg
+						}
+						onClicked: root.pinWifiBand("bg")
+					}
+
+					ModuleButton {
+						readonly property bool chipActive: root.netInfo.band === "5GHz"
+						accentColor: chipActive
+							? Theme.accent
+							: Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.08)
+						height: Theme.roundScaled(24, root.sf)
+						Layout.preferredWidth: Theme.roundScaled(40, root.sf)
+						contentCentered: true
+						IconText {
+							text: "5"
+							fontSize: Theme.fontSizeSmall
+							textColor: Theme.fg
+						}
+						onClicked: root.pinWifiBand("a")
+					}
+
+					ModuleButton {
+						readonly property bool chipActive: root.netInfo.band === "6GHz"
+						accentColor: chipActive
+							? Theme.accent
+							: Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.08)
+						height: Theme.roundScaled(24, root.sf)
+						Layout.preferredWidth: Theme.roundScaled(40, root.sf)
+						contentCentered: true
+						IconText {
+							text: "6"
+							fontSize: Theme.fontSizeSmall
+							textColor: Theme.fg
+						}
+						onClicked: root.pinWifiBand("ax")
+					}
+
+					ModuleButton {
+						readonly property bool chipActive:
+							root.netInfo.band !== "2.4GHz"
+							&& root.netInfo.band !== "5GHz"
+							&& root.netInfo.band !== "6GHz"
+						accentColor: chipActive
+							? Theme.accent
+							: Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.08)
+						height: Theme.roundScaled(24, root.sf)
+						Layout.preferredWidth: Theme.roundScaled(44, root.sf)
+						contentCentered: true
+						IconText {
+							text: "auto"
+							fontSize: Theme.fontSizeSmall
+							textColor: Theme.fg
+						}
+						onClicked: root.pinWifiBand("auto")
+					}
+
+					Item { Layout.fillWidth: true }
+				}
+
+				RowLayout {
+					width: parent.width
+					spacing: Theme.roundScaled(8, root.sf)
+
+					ModuleButton {
+						accentColor: Theme.accent
+						height: Theme.roundScaled(26, root.sf)
+						width: Theme.roundScaled(26, root.sf)
+						Layout.preferredWidth: Theme.roundScaled(26, root.sf)
+						Layout.preferredHeight: Theme.roundScaled(26, root.sf)
+						padding: 0
+						contentCentered: true
+						IconText {
+							glyph: "\uf029"
+							glyphSize: Theme.roundScaled(14, root.sf)
+							glyphColor: Theme.fg
+						}
+						onClicked: root.showQr()
+					}
+
+					Text {
+						text: "Compartilhar Wi-Fi (QR)"
+						font.family: Theme.fontFamily
+						font.pixelSize: Theme.roundScaled(Theme.fontSizeSmall, root.sf)
+						color: Theme.stone
+						elide: Text.ElideRight
+						Layout.fillWidth: true
+					}
+				}
+
+				Image {
+					id: qrImage
+					width: Theme.roundScaled(132, root.sf)
+					height: Theme.roundScaled(132, root.sf)
+					source: root.qrSource
+					fillMode: Image.PreserveAspectFit
+					visible: root.qrShow
+					smooth: true
+					anchors.horizontalCenter: parent.horizontalCenter
+				}
 			}
 
 			Column {

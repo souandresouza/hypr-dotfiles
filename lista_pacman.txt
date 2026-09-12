@@ -70,6 +70,7 @@ zenity
 qrencode
 jq
 curl
+iw
 
 # --- Fontes e ícones ---
 papirus-icon-theme
