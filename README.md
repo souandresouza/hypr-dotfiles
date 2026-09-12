@@ -1,14 +1,43 @@
 <div align="center">
 
-# Hyprland Dotfiles
+# Hyprland + Quickshell Dotfiles
 
 ![Arch](https://img.shields.io/badge/OS-Arch_Linux-1793d1?style=flat-square&logo=archlinux&logoColor=white)
 ![Wayland](https://img.shields.io/badge/Protocol-Wayland-ffbc42?style=flat-square&logo=wayland&logoColor=white)
 
 </div>
 
-## Hyprland
-> O [Hyprland](https://github.com/hyprwm/Hyprland) é um compositor Wayland independente, altamente personalizável e de organização dinâmica em mosaico, sem sacrificar a estética.
+## Sobre
+
+Dotfiles focados em **Hyprland** + **Quickshell (cadrocbar)**.
+
+- Barra, launcher, centro e toasts de notificação feitos em **Quickshell/cadrocbar**;
+- Theming via **python-pywal** (`~/.cache/wal/colors.css` → `hypr/config/colors.lua`, `hyprlock.conf`);
+- **mako**, **waybar** e **matugen** não fazem parte desta configuração.
+
+## Estrutura
+
+```
+hypr-dotfiles/
+├── hypr/                  # Configuração do Hyprland (lua) + scripts
+│   └── scripts/           #   hypr-colors.sh, hyprkeys.sh, run-scripts.sh
+├── quickshell/            # Config do cadrocbar (Bar.qml, Services/, Popouts/...)
+├── quickshell-scripts/    # Scripts chamados pelos serviços do quickshell
+├── scripts/               # Utilitários usados pelos binds/autostart (→ ~/.config/scripts)
+├── install.sh             # Copia as configs para ~/.config/
+└── lista_{pacman,aur}.txt # Pacotes
+```
+
+Em `~/.config/` o quickshell fica organizado assim (o `install.sh` faz isso):
+
+```
+~/.config/quickshell/
+├── cadrocbar/   # ← conteúdo de quickshell/
+├── default/     # → symlink para cadrocbar
+└── scripts/     # ← conteúdo de quickshell-scripts/
+```
+
+> Os serviços do quickshell resolvem scripts via `shellDir/../scripts`, então o layout acima é necessário para o Theme.binDir funcionar.
 
 ## Instalação
 
@@ -23,13 +52,11 @@ cd ~/hypr-dotfiles
 
 ### 2. Instalar os pacotes
 
-Os pacotes oficiais e AUR são instalados separadamente.
-
 ```bash
-# Pacotes oficiais (lista_pacman.txt)
+# Pacotes oficiais (inclui quickshell)
 ./install_pacman.sh
 
-# Pacotes AUR (lista_aur.txt) - instala o yay automaticamente, se necessário
+# Pacotes AUR (quickshell deps extras, pywal etc.)
 ./install_aur.sh
 ```
 
@@ -39,11 +66,16 @@ Os pacotes oficiais e AUR são instalados separadamente.
 ./install.sh
 ```
 
-O `install.sh` verifica e instala as dependências (`git`, `curl`, `yay`), copia todos os diretórios de configuração para `~/.config/`, copia a imagem de perfil do usuário para `~/Documentos/user.png` e define as permissões de execução dos scripts.
+O `install.sh` verifica as dependências (`git`, `curl`, `yay`), copia `hypr/`, `scripts/`, `quickshell/` e `quickshell-scripts/` para `~/.config/` e ajusta permissões de execução.
 
 ### 4. Reiniciar
 
 Efetue logout e entre novamente na sessão do Hyprland.
 
-> 💡 As configurações são instaladas por **cópia**, não por link simbólico. Para modificar, edite diretamente em `~/.config/` ou mantenha uma cópia atualizada deste repositório.
+> 💡 As configurações são instaladas por **cópia**, não por link simbólico. Para modificar, edite em `~/.config/` e mantenha este repositório atualizado (ou edite direto aqui).
 
+## Workflow de cores
+
+1. `random-wallpaper.sh` (SUPER+H) roda `wal -i <imagem>` e aplica via `swaybg`;
+2. `hypr-colors.sh` gera `hypr/config/colors.lua` (bordas do Hyprland);
+3. `update-hyprlock.sh` regera `hyprlock.conf` com o wallpaper atual.

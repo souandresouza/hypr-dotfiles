@@ -95,7 +95,7 @@ else
 fi
 
 # ============================================================================
-# BLOCK 2: COPY DOTFILES
+# BLOCK 2: COPY DOTFILES (Hyprland + Quickshell)
 # ============================================================================
 step_title "2 - COPY DOTFILES"
 
@@ -119,7 +119,7 @@ mkdir -p "$HOME/.config"
 
 # Copy configurations
 log_info "Copying configurations..."
-CONFIG_DIRS=(cava fastfetch fuzzel hypr kitty music-tui scripts mako wallpapers waybar zathura)
+CONFIG_DIRS=(hypr scripts)
 
 for dir in "${CONFIG_DIRS[@]}"; do
     if [[ -d "$DOTFILES/$dir" ]]; then
@@ -130,14 +130,24 @@ for dir in "${CONFIG_DIRS[@]}"; do
     fi
 done
 
-copy_user_image() {
-    if [[ -f ~/hypr-dotfiles/assets/user.png ]]; then
-        cp $DOTFILES/assets/user.png "${XDG_DOCUMENTS_DIR:-$HOME/Documentos}/user.png"
-        echo "✅ Imagem copiada com sucesso!"
-    else
-        echo "❌ Imagem não encontrada em $DOTFILES/assets/user.png"
-    fi
-}
+# Quickshell (cadrocbar bar / toasts / notifications)
+log_info "Setting up Quickshell config..."
+if [[ -d "$DOTFILES/quickshell" ]]; then
+    mkdir -p "$HOME/.config/quickshell"
+    cp -r "$DOTFILES/quickshell" "$HOME/.config/quickshell/cadrocbar"
+    ln -sfn "cadrocbar" "$HOME/.config/quickshell/default"
+    log_ok "Copied quickshell -> ~/.config/quickshell/cadrocbar (default -> cadrocbar)"
+else
+    log_warn "quickshell not found in dotfiles"
+fi
+
+if [[ -d "$DOTFILES/quickshell-scripts" ]]; then
+    mkdir -p "$HOME/.config/quickshell"
+    cp -r "$DOTFILES/quickshell-scripts" "$HOME/.config/quickshell/scripts"
+    log_ok "Copied quickshell-scripts -> ~/.config/quickshell/scripts"
+else
+    log_warn "quickshell-scripts not found in dotfiles"
+fi
 
 # ============================================================================
 # BLOCK 3: SET PERMISSIONS
@@ -150,7 +160,10 @@ log_info "Setting executable permissions..."
 chmod +x "$HOME/.config/scripts"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/scripts/colors"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/hypr/scripts"/*.sh 2>/dev/null || true
-chmod +x "$HOME/.config/waybar/scripts"/*.sh 2>/dev/null || true
-chmod +x "$HOME/.config/waybar/scripts"/*.py 2>/dev/null || true
+chmod +x "$HOME/.config/quickshell"/*/scripts/*.sh 2>/dev/null || true
+chmod +x "$HOME/.config/quickshell/scripts"/*.py 2>/dev/null || true
+chmod +x "$HOME/.config/quickshell/scripts"/*.sh 2>/dev/null || true
 
 log_ok "Permissions set"
+
+log_info "Próximo passo: configurar os pacotes (install_pacman.sh / install_aur.sh)"

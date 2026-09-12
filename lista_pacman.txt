@@ -1,8 +1,8 @@
 # ============================================================
-# Hyprland + DMS - pacotes essenciais
-# Obs: os scripts de cor usam pywal/Matugen para theming;
-# as demais funções (captura, clipboard, etc.) são cobertas
-# pelos pacotes abaixo.
+# Hyprland + Quickshell - pacotes essenciais
+# Obs: theming via pywal (~/.cache/wal -> colors.css);
+# a barra/toasts/notificações são do cadrocbar (Quickshell).
+# mako, waybar e matugen NÃO são usados.
 # ============================================================
 
 # --- Sistema base ---
@@ -21,16 +21,18 @@ zip
 networkmanager
 network-manager-applet
 
-# --- Áudio (PipeWire) ---
-pipewire
-wireplumber
-pipewire-pulse
-
 # --- Bluetooth ---
 bluez
 bluez-utils
 blueman
 bluetui
+
+# --- Áudio (PipeWire) + mpris ---
+pipewire
+wireplumber
+pipewire-pulse
+playerctl
+awww
 
 # --- Compositor Hyprland ---
 hyprland
@@ -40,30 +42,21 @@ hyprpicker
 xdg-desktop-portal-hyprland
 swaybg
 polkit-kde-agent
+quickshell
 
-# --- Theming dinâmico (DMS/Matugen) ---
-matugen
-dms-shell
-
-# --- Aplicativos do desktop ---
+# --- Aplicativos usados pelos binds (terminal/desktop) ---
 kitty
-fuzzel
-mako
-cava
-fastfetch
-zathura-pdf-mupdf
+fuzzel # seletor de emoji (SUPER+U)
 firefox
 thunar
 telegram-desktop
 btop
 scrcpy
-awww
 
-# --- Scripts: funções que o DMS não cobre ---
+# --- Scripts: utilitários (captura, clipboard, screenshot, etc.) ---
 cliphist
 fzf
 wl-clipboard
-playerctl
 grim
 slurp
 satty

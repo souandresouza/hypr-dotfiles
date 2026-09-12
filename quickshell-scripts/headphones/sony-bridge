@@ -1,0 +1,998 @@
+#!/usr/bin/env python3
+"""Hold one Sony MDR RFCOMM link and mirror the headset's listening mode.
+
+    sony-bridge <classic-address> [<rfcomm-uuid>] [<device-name>]
+
+Prints one JSON object per line, and reads one command per line:
+
+    stdout   {"modes": true, "mode": "ambient", "available": ["off","anc","ambient"],
+              "level": 10, "voice": false, "worn": true}
+             {"modes": false, "error": "..."}
+    stdin    set off | set anc | set ambient | level <0-20> | voice on|off
+
+"worn" is left out of the line entirely on a headset that has never sent a
+wearing-status frame. The device name says which models are asked for it —
+MODELS below — and a model that was never asked is never sent the question.
+
+Exit codes, which the shell-side service reads to decide what to do next:
+
+    0   clean stop: SIGTERM/SIGINT, or the widget closed the pipe
+    1   transient: the profile never connected, the handshake went unanswered,
+        or the channel closed under us. Says nothing about the headset, so the
+        service retries with a growing pause
+    3   linked but silent: the handshake worked and every candidate NC/ASM
+        variant was asked and none answered. This headset speaks the protocol
+        but not this part of it, so the service parks the address
+    4   setup failure: bad arguments, or python-dbus/PyGObject missing. About
+        this machine, not about the headset
+
+Why a bridge at all, and why one per device: the mode lives behind Sony's own
+RFCOMM service (UUID 956c7b26-… for MDR v2, 96cc203e-… for v1), the same
+channel carries our commands and the headset's unsolicited notifications, and
+BlueZ hands the socket
+to whoever registered the org.bluez.Profile1 for that UUID — one holder,
+like the Fast Pair reader. So one process owns the channel, the widget talks to
+it through a pipe, and pressing the NC/AMB button on the headset and clicking a
+mode in the panel are the same conversation. Which of the two UUIDs to register
+is the optional second argument; without it the bridge registers v2, which is
+what every caller before the v1 headsets sent.
+
+This is the sibling of jbl-bridge, which does the same job for JBL earbuds over
+BLE GATT. Both write the same line shape, so the service does not care which one
+is running; the backend is picked from the device's SDP UUIDs.
+
+Protocol, confirmed on a WH-CH720N and a WH-1000XM6 — see PROTOCOL.md and the
+reference probe in tools/sony_probe.py, which is what these frames were read
+off:
+
+    frame    3E <type> <seq> <len u32be> <payload> <cksum> 3C, everything
+             between the markers byte-stuffed with 3D (3C/3D/3E -> 3D, b & EF)
+    type     0x0C command, 0x01 ACK
+    seq      one toggling bit. An ACK carries 1 - seq, never seq. Our own seq
+             is whatever the last ACK told us, and only one command may be
+             outstanding at a time
+    init     payload 00 00, answered with 01 …; an 8-byte answer means v2, a
+             4-byte one v1
+    modes    payload 66 <t> GET, 67 <t> RET, 68 <t> SET, 69 <t> NTFY, where <t>
+             is the "inquired type" that decides the layout of the block
+
+The two things that only the hardware tells you, both handled below:
+
+  * Which inquired type this model uses is not knowable in advance (the two
+    open implementations disagree about the CH720N), so every candidate in
+    CANDIDATES is asked in turn and the one that answers wins. A wrong one is
+    ACKed and then ignored, which is why each gets a deadline rather than an
+    error. The handshake's length only orders that list — it never shortens it,
+    because a headset that answers today must still be asked its own question
+    tomorrow.
+  * A SET is ACKed immediately but does not take effect immediately: a GET sent
+    straight after still returns the old state, and about a third of a second
+    later the headset sends the NTFY with the new one. So the NTFY is the
+    source of truth and nothing is read back after a set.
+  * A WH-1000XM6 answers the NC/ASM GET on 0x17 like the CH720N, but its own
+    unsolicited notifications name a type this bridge never asks for, 0x19 —
+    same fields, one slot over. parse_ncasm() decodes both; PROTOCOL.md has
+    the byte-for-byte comparison. Its wearing sensor is a different message
+    class entirely (SYSTEM status, type 0x10) — see on_wear() below.
+"""
+import ctypes
+import json
+import os
+import re
+import signal
+import struct
+import sys
+
+# Omarchy ships python-dbus and python-gobject, but a missing one must still
+# land on stdout in the shape the widget already reads, so the panel can print
+# the reason instead of sitting there with nothing to show.
+try:
+    import dbus
+    import dbus.mainloop.glib
+    import dbus.service
+    from gi.repository import GLib
+except ImportError as error:
+    sys.stdout.write(json.dumps({
+        "modes": False,
+        "error": "missing python dependency %s"
+                 % (getattr(error, "name", None) or error),
+    }) + "\n")
+    sys.stdout.flush()
+    sys.exit(4)
+
+# GLib.unix_signal_add is deprecated in newer PyGObject, and its warning would
+# land in omarchy-shell's log every time the bridge starts.
+try:
+    from gi.repository import GLibUnix
+    unix_signal_add = GLibUnix.signal_add
+except ImportError:
+    unix_signal_add = GLib.unix_signal_add
+
+UUID_V2 = "956c7b26-d49a-4ba8-b03f-b17d393cb6e2"
+UUID_V1 = "96cc203e-5068-46ad-b32d-e316f5e069ba"
+UUID = re.compile(r"^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$", re.IGNORECASE)
+PROFILE_PATH = "/io/github/ncr/omaphones/sony"
+
+# Framing. HDR and TRL are never escaped, which is what makes "scan to the next
+# 0x3C" a correct framer.
+HDR, TRL, ESC, MASK = 0x3E, 0x3C, 0x3D, 0xEF
+DATA_MDR, DATA_MDR_NO2, ACK = 0x0C, 0x0E, 0x01
+
+CONNECT_RET_PROTOCOL_INFO = 0x01
+NCASM_GET, NCASM_RET, NCASM_SET, NCASM_NTFY = 0x66, 0x67, 0x68, 0x69
+
+# Wearing detection, on the SYSTEM status class rather than NCASM. Observed on
+# a WH-1000XM6: the reply to one GET after the handshake, then the headset
+# speaking up on its own for every take-off and put-on, twice in a row:
+#
+#   GET, asked once:                            f2 10
+#   RET  (0xf3), one data byte:                 f3 10 00              worn
+#   NTFY (0xf5) taking it off, two data bytes:  f5 10 01 01           not worn
+#   NTFY putting it back on:                    f5 10 01 00           worn
+#
+# So: command byte 0xf3 (a GET's reply) or 0xf5 (unsolicited), inquired type
+# 0x10, and the *last* byte is the flag — 0x00 worn, anything else not. The
+# extra byte a NTFY carries before it (always seen as 0x01) is not decoded into
+# anything; only the tail matters, the same way NCASM's variants are read from
+# the tail regardless of their width.
+SYSTEM_GET_STATUS, SYSTEM_RET_STATUS, SYSTEM_NTFY_STATUS = 0xF2, 0xF3, 0xF5
+WEARING_STATUS_TYPE = 0x10
+
+# Which headsets are asked f2 10, keyed by the name the headset reports over
+# Bluetooth (BlueZ's Name; DeviceFollower.qml passes it as the third
+# argument). The rows that say no are models pinned in
+# tests/sony_bridge_test.py: nobody has seen them answer the question, and a
+# headset that works is not sent a frame it never was on the strength of
+# another model answering it. A model nobody has held is asked — the wider
+# choice, and silence costs nothing: on_wear() only ever runs from a real RET
+# or NTFY. A new model with a wear sensor is one more row, not an edit to
+# another owner's.
+MODELS = {
+    "WH-CH720N": {"wear": False},    # ncr
+    "WH-1000XM5": {"wear": False},   # huynguyendinhquang
+    "WH-1000XM4": {"wear": False},   # seth-reee, PR #6
+    "WH-1000XM6": {"wear": True},    # f-iacono, PR #7 — answers f3 10 00
+}
+UNKNOWN = {"wear": True}
+# No name at all is a caller written before this argument, and it gets exactly
+# what it used to: no question.
+NAMELESS = {"wear": False}
+
+# The NC/ASM variants worth asking a headset about. An inquired type belongs to
+# one MDR generation and names one block layout, and the number is unique across
+# both generations, so the answering type — not the UUID and not the handshake —
+# is what settles how a block is read and written. Anything else in Sony's table
+# either does not exist on a headset with these three modes or is a superset we
+# would decode wrongly.
+#
+#   v2  0x17  the one the CH720N and the WH-1000XM5 answer
+#       0x15  what Gadgetbridge believes the CH720N uses
+#       0x22  ASM_SEAMLESS, the ambient-only models
+#   v1  0x02  NC + ASM, the one the WH-1000XM4 answers
+#
+# Sony's v1 table also numbers an NC-only 0x01 and an ambient-only 0x03. Neither
+# is here: no headset on this desk or in a pull request has answered one, their
+# block lengths are unconfirmed, and a variant nobody has seen answered would be
+# a guess sent to somebody's working headphones.
+CANDIDATES_V2 = (0x17, 0x15, 0x22)
+CANDIDATES_V1 = (0x02,)
+CANDIDATES = CANDIDATES_V2 + CANDIDATES_V1
+
+# What each variant can actually do, which is what the panel draws buttons for.
+# 0x22 (ASM_SEAMLESS) is an ambient-only control: its master switch turns the
+# ambient pass-through on and off, and there is no noise cancelling to select.
+# 0x19 is never asked for (not in CANDIDATES) but is what a WH-1000XM6 sends
+# unprompted for every mode change — same three states as 0x17, which is the
+# type this model does answer a GET on. See parse_ncasm.
+AVAILABLE = {
+    0x17: ["off", "anc", "ambient"],
+    0x15: ["off", "anc", "ambient"],
+    0x22: ["off", "ambient"],
+    0x19: ["off", "anc", "ambient"],
+    0x02: ["off", "anc", "ambient"],
+}
+
+# The byte a SET has to echo back rather than invent — 0x15's NcValue on v2,
+# ncType on v1. 0x02 is ON_DUAL on the one and DUAL_SINGLE_OFF on the other,
+# both what a two-microphone headset reports, and it is only ever a fallback:
+# the value the device itself last reported is preferred.
+NC_VALUE_DEFAULT = 0x02
+
+MAX_LEVEL = 20
+
+ADDRESS = re.compile(r"^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$")
+
+USAGE = "usage: sony-bridge <classic-address> [<rfcomm-uuid>] [<device-name>]"
+
+EXIT_TRANSIENT = 1
+EXIT_UNSUPPORTED = 3
+EXIT_SETUP = 4
+
+# Every synchronous call into bluetoothd runs on the main loop, so its reply
+# timeout is also how long a wedged bluetoothd can sit on our SIGTERM. Five
+# seconds is longer than a healthy answer takes and short enough to stay out of
+# the way of a shutdown. ConnectProfile is the exception: it is made
+# asynchronously (see connect()), so it may have the long timeout BlueZ needs to
+# bring up a page-scanning headset.
+REPLY_TIMEOUT = 5
+CONNECT_TIMEOUT = 30
+
+# How long to leave the registration in place before asking BlueZ to connect the
+# profile: the registration has to be visible to bluetoothd before the connect,
+# and the headset's ACL link wants a moment to settle after it comes up.
+CONNECT_DELAY = 500
+
+# The first ConnectProfile after the headset connects usually fails with
+# br-connection-busy — bluetoothd is still doing its own SDP and profile setup —
+# and the next one works. Retrying is the normal path, not the error path, so it
+# is patient: nine more tries at 1.5 s covers a headset that takes its time
+# waking up without leaving the widget in "pending" for a minute.
+CONNECT_RETRY = 1500
+CONNECT_ATTEMPTS = 10
+
+# The channel is silent until we send the handshake, and sometimes silent after
+# it too — Gadgetbridge sends the init up to three times before giving up, for
+# exactly this. Two seconds is several round trips on RFCOMM.
+INIT_TIMEOUT = 2000
+INIT_ATTEMPTS = 3
+
+# How long a candidate inquired type gets to answer before the next one is
+# tried. A wrong type is ACKed and then silently dropped, so this deadline is
+# the only thing that distinguishes "not this variant" from "not answering".
+CANDIDATE_TIMEOUT = 3000
+
+# One command may be outstanding at a time, and the next one is sent when the
+# ACK for the last arrives. If an ACK is lost the queue would stall forever, so
+# a command that has gone unacknowledged for this long is written off and the
+# queue moves on. Ordinary ACKs come back in single-digit milliseconds.
+ACK_TIMEOUT = 3000
+
+
+def emit(payload):
+    try:
+        sys.stdout.write(json.dumps(payload, separators=(",", ":")) + "\n")
+        sys.stdout.flush()
+    except (BrokenPipeError, ValueError):
+        # The widget let go of the pipe. There is nobody left to talk to, and
+        # dropping the bus connection is what releases the profile
+        # registration — process exit does that on its own.
+        os._exit(0)
+
+
+def arm_parent_death_signal():
+    """Die with the shell that started us.
+
+    A crashed or SIGKILLed omarchy-shell cannot reap its children, and an
+    orphaned bridge keeps both the Profile1 registration and the RFCOMM channel,
+    so every bridge started afterwards is handed nothing and the widget never
+    shows a listening mode again. PR_SET_PDEATHSIG makes the kernel do the
+    tidying that the dead parent cannot.
+    """
+    try:
+        libc = ctypes.CDLL("libc.so.6", use_errno=True)
+        libc.prctl(1, signal.SIGTERM)  # PR_SET_PDEATHSIG
+    except Exception:
+        return
+    # PR_SET_PDEATHSIG is lost if the parent died between fork and here, and
+    # then the signal never comes; getppid() is how that is noticed.
+    if os.getppid() == 1:
+        os._exit(0)
+
+
+def escape(data):
+    out = bytearray()
+    for byte in data:
+        if byte in (HDR, TRL, ESC):
+            out += bytes([ESC, byte & MASK])
+        else:
+            out.append(byte)
+    return bytes(out)
+
+
+def unescape(data):
+    out, index = bytearray(), 0
+    while index < len(data):
+        if data[index] == ESC:
+            index += 1
+            if index >= len(data):
+                break
+            out.append(data[index] | 0x10)
+        else:
+            out.append(data[index])
+        index += 1
+    return bytes(out)
+
+
+def encode(dtype, seq, payload=b""):
+    """One frame, checksummed over the unescaped bytes and then stuffed."""
+    body = bytes([dtype, seq]) + struct.pack(">I", len(payload)) + payload
+    return bytes([HDR]) + escape(body + bytes([sum(body) & 0xFF])) + bytes([TRL])
+
+
+def decode(frame):
+    """(dtype, seq, payload) for a frame including its markers, or None.
+
+    A frame that does not add up is dropped rather than guessed at: the only way
+    to get one on this link is a bug on one side or the other, and acting on
+    half a payload would move the headset to a mode nobody asked for.
+    """
+    if len(frame) < 9 or frame[0] != HDR or frame[-1] != TRL:
+        return None
+    message = unescape(frame[1:-1])
+    if len(message) < 7:
+        return None
+    dtype, seq = message[0], message[1]
+    length = struct.unpack(">I", message[2:6])[0]
+    if len(message) != 6 + length + 1:
+        return None
+    payload, checksum = message[6:6 + length], message[6 + length]
+    if checksum != sum(message[:6 + length]) & 0xFF:
+        return None
+    return dtype, seq, payload
+
+
+def parse_ncasm(payload, expect=None):
+    """The listening-mode state carried by a RET (0x67) or NTFY (0x69).
+
+    `expect` is the inquired type this headset has already answered with, once
+    it has answered: after that, a block of any other type is dropped. Before
+    it, any candidate is allowed, because the probe is asking them in turn and
+    the answer is what settles it. Both generations' numbers are on the table at
+    that point, so a block is only ever read the way its own type says — never
+    the way the UUID or the handshake suggested.
+    """
+    if len(payload) < 2 or payload[0] not in (NCASM_RET, NCASM_NTFY):
+        return None
+    inquired = payload[1]
+    # The XM6 settles on 0x17, then volunteers compatible wider 0x19 mode
+    # notifications. Other mismatched types still belong to another layout and
+    # must be ignored once a model has answered.
+    if expect is not None and inquired != expect \
+            and not (expect == 0x17 and inquired == 0x19):
+        return None
+    if inquired in CANDIDATES_V1:
+        return parse_ncasm_v1(payload)
+    # 0x19 is notification-only on the WH-1000XM6: the device answers GET on
+    # 0x17 but reports subsequent mode changes on this compatible wider block.
+    if inquired in CANDIDATES_V2 or inquired == 0x19:
+        return parse_ncasm_v2(payload)
+    return None
+
+
+def parse_ncasm_v2(payload):
+    """The v2 block: 0x17 and 0x22 are 6 bytes, 0x15 is 8.
+
+    Focus-on-voice and the ambient level are the last two bytes of every one of
+    the three GET-able layouts, which is why they are read from the tail rather
+    than from an index that depends on the variant.
+    """
+    if len(payload) < 6:
+        return None
+    inquired = payload[1]
+    if inquired == 0x19:
+        # Never a candidate — nothing GETs 0x19 — but a WH-1000XM6 sends it
+        # unprompted for every mode change, answering a SET built for 0x17
+        # (the type its own GET replies on). Confirmed against three states
+        # here — off, anc, and ambient at a non-default level: effect and
+        # ambientMode sit in the same slots as 0x17, followed by voice and
+        # level one slot later, then two trailing 0x00 bytes. As with 0x17,
+        # level/voice are only current while the mode is ambient.
+        if len(payload) < 9:
+            return None
+        return {
+            "inquired": inquired,
+            "mode": "off" if payload[3] != 0x01 else ("ambient" if payload[4] == 0x01 else "anc"),
+            "voice": payload[5] == 0x01,
+            "level": payload[6],
+            "ncValue": None,
+        }
+    on = payload[3] == 0x01
+    # On 0x22 the master switch *is* the ambient switch; the other two layouts
+    # carry the NC-versus-ambient choice in the byte after it.
+    ambient = True if inquired == 0x22 else (len(payload) > 4 and payload[4] == 0x01)
+    return {
+        "inquired": inquired,
+        "mode": "off" if not on else ("ambient" if ambient else "anc"),
+        "voice": payload[-2] == 0x01,
+        "level": payload[-1],
+        # Only the 0x15 layout has it, at the index the ambient fields follow.
+        "ncValue": payload[5] if inquired == 0x15 and len(payload) > 7 else None,
+    }
+
+
+def parse_ncasm_v1(payload):
+    """The v1 block: NcAsmParam, 7 bytes after the command byte.
+
+        67 02  ncAsmEffect ncType ncValue  asmType asmId asmValue
+
+    A different shape from v2, not a different order: the master switch and the
+    NC-versus-ambient choice sit one byte earlier, ncType is an enum of its own,
+    and the level is at a fixed index rather than at the tail. Read by index,
+    because a 7-byte block gives the tail no meaning it does not already have.
+    """
+    if len(payload) < 8:
+        return None
+    on = payload[2] == 0x01
+    nc_value = payload[4]
+    return {
+        "inquired": payload[1],
+        # ncValue: 0 off, 1 SINGLE (ambient), 2 DUAL (noise cancelling).
+        "mode": "off" if not on else ("ambient" if nc_value == 0x01 else "anc"),
+        "voice": payload[6] == 0x01,      # asmId, 1 is voice
+        "level": payload[7],              # asmValue, 0-20
+        # ncType, the value a SET must echo back, the way 0x15's ncValue is.
+        "ncValue": payload[3],
+    }
+
+
+def find_device_path(bus, address):
+    wanted = address.upper()
+    objects = dbus.Interface(bus.get_object("org.bluez", "/"),
+                             "org.freedesktop.DBus.ObjectManager").GetManagedObjects()
+    for path, interfaces in objects.items():
+        device = interfaces.get("org.bluez.Device1")
+        if device and str(device.get("Address", "")).upper() == wanted:
+            return str(path)
+    return None
+
+
+class Bridge:
+    """The whole conversation: registration, handshake, probe, then mirroring."""
+
+    def __init__(self, bus, address, loop, uuid=UUID_V2, name=""):
+        self.bus = bus
+        self.address = address
+        self.loop = loop
+        # The row in MODELS for this headset, by the name it reports; it only
+        # decides the one question (wearing status) that not every model is
+        # asked. The block layout is still whatever inquired type answers.
+        self.model = MODELS.get(name, UNKNOWN) if name else NAMELESS
+        # Which of Sony's two RFCOMM services to register and connect. It says
+        # nothing about the block layout — the answering inquired type does —
+        # so a wrong guess here costs a connection, not a wrong frame.
+        self.uuid = uuid
+        self.exit_code = None
+        self.device = None
+        self.manager = None
+        self.registered = False
+
+        # The channel.
+        self.fd = None
+        self.watch = None
+        self.buffer = bytearray()
+
+        # Flow control: our outgoing sequence bit, whether a command is waiting
+        # for its ACK, and the commands that have not been sent yet. One
+        # outstanding command at a time is what both reference implementations
+        # do, and what the headset expects.
+        self.seq = 0
+        self.waiting = False
+        self.sent = 0            # serial number of the outstanding command
+        self.queue = []
+
+        # What the headset told us. `inquired` is None until something answers,
+        # and until then there is no state to report and no SET we could build.
+        self.inquired = None
+        self.mode = ""
+        self.level = 0
+        self.voice = False
+        self.nc_value = NC_VALUE_DEFAULT
+        # None until a SYSTEM status frame says otherwise — most headsets never
+        # send one, and "worn" is left out of the line entirely until one does,
+        # rather than guessed at either state.
+        self.worn = None
+        self.last_line = None
+
+        self.protocol_seen = False
+        self.candidate = 0
+        # Every candidate, in the order they will be asked. The handshake
+        # reorders this list; nothing shortens it.
+        self.candidates = CANDIDATES
+
+        # Whatever of a stdin line has arrived without its newline yet.
+        self.pending = ""
+
+
+    # -- endings ----------------------------------------------------------
+
+    def finish(self, code, message=None):
+        """Decide how this run ends, once, from wherever noticed it."""
+        if self.exit_code is not None:
+            return False
+        self.exit_code = code
+        if message:
+            emit({"modes": False, "error": message})
+        self.loop.quit()
+        return False
+
+    def unregister(self):
+        """Give the UUID back, on every exit path.
+
+        Leaving it registered would make BlueZ hold the channel open with nobody
+        reading it, and the next bridge would be told the profile is taken.
+        """
+        if self.watch is not None:
+            try:
+                GLib.source_remove(self.watch)
+            except Exception:
+                pass
+            self.watch = None
+        if self.fd is not None:
+            try:
+                os.close(self.fd)
+            except OSError:
+                pass
+            self.fd = None
+        if self.manager is not None and self.registered:
+            try:
+                self.manager.UnregisterProfile(PROFILE_PATH, timeout=REPLY_TIMEOUT)
+            except dbus.DBusException:
+                pass
+            self.registered = False
+
+    # -- setup ------------------------------------------------------------
+
+    def register(self):
+        """Hand BlueZ our Profile1 and ask it to connect the channel."""
+        try:
+            device_path = find_device_path(self.bus, self.address)
+        except dbus.DBusException as error:
+            return self.finish(EXIT_TRANSIENT,
+                               "cannot reach BlueZ: %s" % error.get_dbus_message())
+        if not device_path:
+            return self.finish(EXIT_TRANSIENT,
+                               "no paired device with address %s" % self.address)
+        self.device = dbus.Interface(
+            self.bus.get_object("org.bluez", device_path), "org.bluez.Device1")
+        self.manager = dbus.Interface(
+            self.bus.get_object("org.bluez", "/org/bluez"), "org.bluez.ProfileManager1")
+        try:
+            self.manager.RegisterProfile(PROFILE_PATH, self.uuid, {
+                "Name": "Omaphones Sony",
+                "Role": "client",
+                "RequireAuthentication": dbus.Boolean(False),
+                "RequireAuthorization": dbus.Boolean(False),
+            }, timeout=REPLY_TIMEOUT)
+        except dbus.DBusException as error:
+            # Taken means another holder — a second copy of this bridge, or the
+            # probe in tools/ — and there is nothing to do but come back later.
+            return self.finish(EXIT_TRANSIENT,
+                               "cannot register the Sony profile: %s"
+                               % error.get_dbus_message())
+        self.registered = True
+        GLib.timeout_add(CONNECT_DELAY, self.connect, 0)
+        return False
+
+    def connect(self, attempt):
+        """Ask BlueZ to open the channel. Asynchronous, and that is not optional.
+
+        A blocking ConnectProfile stalls the GLib loop, and NewConnection is
+        delivered on that same loop — so the call would sit there waiting for a
+        connection whose arrival it is itself blocking. The first attempt
+        commonly fails with br-connection-busy while bluetoothd finishes its own
+        setup; a retry a moment later is the normal path.
+        """
+        if self.exit_code is not None or self.fd is not None:
+            return False
+
+        def failed(error):
+            if self.exit_code is not None or self.fd is not None:
+                return
+            if attempt + 1 < CONNECT_ATTEMPTS:
+                GLib.timeout_add(CONNECT_RETRY, self.connect, attempt + 1)
+                return
+            self.finish(EXIT_TRANSIENT, "cannot open the Sony channel: %s"
+                        % error.get_dbus_message())
+
+        try:
+            self.device.ConnectProfile(self.uuid, reply_handler=lambda: None,
+                                       error_handler=failed, timeout=CONNECT_TIMEOUT)
+        except dbus.DBusException as error:
+            failed(error)
+        return False
+
+    def opened(self, fd):
+        """BlueZ handed us the socket."""
+        if self.fd is not None:
+            # A second channel for the same UUID should not happen, and holding
+            # two would double every notification. Keep the first.
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+            return
+        self.fd = fd
+        self.watch = GLib.io_add_watch(fd, GLib.PRIORITY_DEFAULT,
+                                       GLib.IO_IN | GLib.IO_HUP | GLib.IO_ERR,
+                                       self.on_io)
+        self.send_init(1)
+
+    # -- handshake and probe ----------------------------------------------
+
+    def send_init(self, attempt):
+        """CONNECT_GET_PROTOCOL_INFO, retried while the headset ignores it."""
+        if self.exit_code is not None or self.protocol_seen:
+            return False
+        if attempt > INIT_ATTEMPTS:
+            return self.finish(EXIT_TRANSIENT,
+                               "the Sony headset did not answer the handshake")
+        # Straight out rather than through the queue: this is the first frame on
+        # the channel, and a retry has to go out whether or not the last attempt
+        # was ever acknowledged.
+        self.waiting = False
+        self.queue = []
+        self.write(encode(DATA_MDR, self.seq, b"\x00\x00"))
+        GLib.timeout_add(INIT_TIMEOUT, self.send_init, attempt + 1)
+        return False
+
+    def probe(self, candidate):
+        """Ask the next candidate inquired type, or give up on this headset."""
+        if self.exit_code is not None or self.inquired is not None:
+            return False
+        if candidate >= len(self.candidates):
+            return self.finish(EXIT_UNSUPPORTED,
+                               "the headset did not answer the listening-mode query")
+        self.candidate = candidate
+        self.push(bytes([NCASM_GET, self.candidates[candidate]]))
+        GLib.timeout_add(CANDIDATE_TIMEOUT, self.next_candidate, candidate)
+        return False
+
+    def next_candidate(self, candidate):
+        # Only if nothing answered in the meantime and we are still on the same
+        # question: a late ACK or an unsolicited notification may have settled
+        # it already.
+        if self.inquired is None and self.candidate == candidate:
+            self.probe(candidate + 1)
+        return False
+
+    # -- the wire ---------------------------------------------------------
+
+    def write(self, frame):
+        if self.fd is None:
+            return
+        try:
+            written = 0
+            while written < len(frame):
+                written += os.write(self.fd, frame[written:])
+        except OSError as error:
+            self.finish(EXIT_TRANSIENT, "the Sony channel closed: %s" % error)
+
+    def push(self, payload):
+        """Queue one command; it goes out when the link is free."""
+        self.queue.append(payload)
+        self.pump()
+
+    def pump(self):
+        if self.waiting or not self.queue or self.fd is None:
+            return False
+        payload = self.queue.pop(0)
+        self.waiting = True
+        self.sent += 1
+        self.write(encode(DATA_MDR, self.seq, payload))
+        GLib.timeout_add(ACK_TIMEOUT, self.on_ack_timeout, self.sent)
+        return False
+
+    def on_ack_timeout(self, serial):
+        # The ACK for that command never came. Nothing can be concluded from
+        # that on its own — the headset drops the odd frame — so the queue moves
+        # on rather than the run ending.
+        if self.waiting and self.sent == serial:
+            self.waiting = False
+            self.pump()
+        return False
+
+    def on_io(self, _fd, condition):
+        if condition & (GLib.IO_HUP | GLib.IO_ERR):
+            self.finish(EXIT_TRANSIENT, "the Sony channel closed")
+            return False
+        try:
+            data = os.read(self.fd, 4096)
+        except OSError as error:
+            self.finish(EXIT_TRANSIENT, "the Sony channel closed: %s" % error)
+            return False
+        if not data:
+            self.finish(EXIT_TRANSIENT, "the Sony channel closed")
+            return False
+        self.buffer += data
+        self.parse_buffer()
+        return self.exit_code is None
+
+    def parse_buffer(self):
+        """Every whole frame the buffer holds, in order.
+
+        One read is not one frame: several can arrive together and one can be
+        split across two reads. 0x3C cannot occur inside a stuffed body, so
+        "from the next 0x3E to the first 0x3C after it" is exact.
+        """
+        while True:
+            start = self.buffer.find(HDR)
+            if start < 0:
+                self.buffer.clear()
+                return
+            end = self.buffer.find(TRL, start + 1)
+            if end < 0:
+                del self.buffer[:start]
+                return
+            frame = bytes(self.buffer[start:end + 1])
+            del self.buffer[:end + 1]
+            self.on_frame(frame)
+            if self.exit_code is not None:
+                return
+
+    def on_frame(self, frame):
+        decoded = decode(frame)
+        if decoded is None:
+            return
+        dtype, seq, payload = decoded
+        if dtype == ACK:
+            # The ACK carries the sequence number our next command must use, and
+            # it is the only thing that advances ours: a device-initiated frame
+            # does not move it.
+            self.seq = seq
+            self.waiting = False
+            self.pump()
+            return
+        if dtype in (DATA_MDR, DATA_MDR_NO2):
+            # First thing, before acting on it, and for unsolicited frames too.
+            # An unacknowledged frame is retransmitted and then the headset goes
+            # quiet.
+            self.write(encode(ACK, 1 - seq))
+        if not payload:
+            return
+        if payload[0] == CONNECT_RET_PROTOCOL_INFO:
+            if not self.protocol_seen:
+                self.protocol_seen = True
+                self.order_candidates(len(payload))
+                self.probe(0)
+                # Wearing status is never volunteered at connect the way NCASM's
+                # RET is answered here for free — only a later change speaks up
+                # on its own — so a model in MODELS that answers it is asked
+                # once, up front, rather than leaving `worn` unset until the
+                # first time you take the headset off. The pinned models are
+                # not asked; see MODELS.
+                if self.model["wear"]:
+                    self.push(bytes([SYSTEM_GET_STATUS, WEARING_STATUS_TYPE]))
+            return
+        state = parse_ncasm(payload, self.inquired)
+        if state is not None:
+            self.on_state(state)
+        elif len(payload) >= 3 and payload[0] in (SYSTEM_RET_STATUS, SYSTEM_NTFY_STATUS) \
+                and payload[1] == WEARING_STATUS_TYPE:
+            self.on_wear(payload[-1] == 0x00)
+
+    def order_candidates(self, length):
+        """Ask the generation the handshake named first — and the other after.
+
+        The reply's length is the protocol generation: 8 bytes v2, 4 bytes v1.
+        That is a good hint and a bad rule. Two models answer 0x17 today, and a
+        headset that replies short — or replies with something nobody has seen —
+        must still be asked 0x17, 0x15 and 0x22 before it is given up on, or one
+        handshake byte is all it takes to lose a headset that works. So the
+        length moves the likely questions to the front and the rest stay behind
+        them: a headset that answers something pays nothing for the ones behind
+        it, and a headset that answers nothing sends three more frames before
+        the same verdict.
+        """
+        first = CANDIDATES_V1 if length < 8 else CANDIDATES_V2
+        rest = tuple(c for c in CANDIDATES if c not in first)
+        self.candidates = first + rest
+
+    def on_state(self, state):
+        """A RET or an NTFY: the headset's own account of its listening mode."""
+        first = self.inquired is None
+        self.inquired = state["inquired"]
+        self.mode = state["mode"]
+        self.level = state["level"]
+        self.voice = state["voice"]
+        if state["ncValue"] is not None:
+            # Whatever the headset reports here is what a SET must echo back;
+            # inventing a value is how the 0x15 layout gets rejected.
+            self.nc_value = state["ncValue"]
+        self.push_line(first)
+
+    def on_wear(self, worn):
+        """SYSTEM status, type 0x10: on-head or not, from a headset that says so.
+
+        Arrives independently of NCASM and on its own schedule — the widget
+        wants to know the moment it changes, not only the next time the
+        listening mode does — so it gets its own push rather than waiting to
+        ride along on an NCASM line. Before the mode is known there is nothing
+        to build a line for; push_line() is called the moment on_state() does
+        settle it, and self.worn is read then like every other field.
+        """
+        self.worn = worn
+        if self.inquired is not None:
+            self.push_line(False)
+
+    def push_line(self, first):
+        """Build the line from current state and emit it if it says something new."""
+        line = {
+            "modes": True,
+            "mode": self.mode,
+            "available": AVAILABLE.get(self.inquired, ["off", "anc", "ambient"]),
+            "level": self.level,
+            "voice": self.voice,
+        }
+        if self.worn is not None:
+            line["worn"] = self.worn
+        if first or line != self.last_line:
+            self.last_line = line
+            emit(line)
+
+    # -- commands ---------------------------------------------------------
+
+    def set_frame(self, mode, level, voice):
+        """The SET block for the variant this headset answered with.
+
+        The ambient level and the focus-on-voice flag are carried in every mode,
+        and the headset stores them and only applies them in ambient — so a
+        change of mode has to repeat the stored values rather than send zeroes.
+        """
+        on = 1 if mode != "off" else 0
+        ambient = 1 if mode == "ambient" else 0
+        level = max(0, min(MAX_LEVEL, int(level)))
+        voice = 1 if voice else 0
+        if self.inquired == 0x02:
+            # v1: the block the headset answered with, written back. ncValue
+            # carries the three-way choice here rather than a separate ambient
+            # flag, and asmType (0x01) is the only value the WH-1000XM4 was
+            # seen to take.
+            nc_value = 0 if not on else (1 if mode == "ambient" else 2)
+            return bytes([NCASM_SET, 0x02, on, self.nc_value, nc_value,
+                          0x01, voice, level])
+        if self.inquired == 0x15:
+            return bytes([NCASM_SET, 0x15, 0x01, on, ambient,
+                          self.nc_value, voice, level])
+        if self.inquired == 0x22:
+            # Ambient-only: the master switch is the ambient switch, so "anc"
+            # never reaches here (it is not in this variant's available list).
+            return bytes([NCASM_SET, 0x22, 0x01, on, voice, level])
+        return bytes([NCASM_SET, 0x17, 0x01, on, ambient, voice, level])
+
+    def command(self, line):
+        """One line from the widget. Unknown or impossible ones are ignored.
+
+        Nothing is echoed back and nothing is read back: the headset answers a
+        SET with a notification of its own about a third of a second later, and
+        that notification — not our optimism — is what the panel is shown.
+        """
+        parts = line.strip().split()
+        if not parts or self.inquired is None:
+            return
+        available = AVAILABLE.get(self.inquired, ["off", "anc", "ambient"])
+        if parts[0] == "set" and len(parts) > 1:
+            if parts[1] not in available:
+                return
+            self.push(self.set_frame(parts[1], self.level, self.voice))
+        elif parts[0] == "level" and len(parts) > 1:
+            try:
+                level = int(parts[1])
+            except ValueError:
+                return
+            if "ambient" not in available:
+                return
+            # The stored level only moves when an ambient SET carries it, so
+            # asking for a level is also asking for ambient.
+            self.push(self.set_frame("ambient", level, self.voice))
+        elif parts[0] == "voice" and len(parts) > 1 and parts[1] in ("on", "off"):
+            # Focus on voice belongs to the ambient mode, but it is a stored
+            # setting like the level, so it is sent in whatever mode is current
+            # rather than dragging the headset into ambient behind the user's
+            # back. Sent while off or in NC it may not stick, which the next
+            # notification will say.
+            self.push(self.set_frame(self.mode or "ambient", self.level,
+                                     parts[1] == "on"))
+
+    def on_stdin(self, _fd, condition):
+        if condition & (GLib.IO_HUP | GLib.IO_ERR):
+            # The widget let go of the pipe: a clean stop, not a failure.
+            self.finish(0)
+            return False
+        try:
+            chunk = os.read(0, 4096)
+        except OSError:
+            self.finish(0)
+            return False
+        if not chunk:
+            self.finish(0)
+            return False
+        self.pending += chunk.decode("utf-8", "replace")
+        while "\n" in self.pending:
+            line, self.pending = self.pending.split("\n", 1)
+            self.command(line)
+        return True
+
+    def listen_to_stdin(self):
+        GLib.io_add_watch(0, GLib.PRIORITY_DEFAULT,
+                          GLib.IO_IN | GLib.IO_HUP | GLib.IO_ERR, self.on_stdin)
+
+
+def main():
+    argv = sys.argv[1:]
+    address = argv[0].strip() if argv else ""
+    if argv and argv[0] in ("-h", "--help"):
+        # A person asking for the usage gets plain text and a clean exit, the
+        # same as jbl-bridge; everything else below is for the widget.
+        print(USAGE)
+        return 0
+    if not argv or not ADDRESS.match(address):
+        # There is no other interactive use of this program: the widget is the
+        # only caller, so anything that is not an address is a setup failure,
+        # reported in the shape the panel reads and with the exit code that
+        # parks it rather than retrying.
+        emit({"modes": False,
+              "error": "%s (not a Bluetooth address: %r)" % (USAGE, address)})
+        sys.exit(EXIT_SETUP)
+
+    # The UUID is optional and defaults to v2, so a caller written before the v1
+    # headsets — an older DeviceFollower.qml against a newer bridge — asks for
+    # exactly what it used to.
+    uuid = argv[1].strip() if len(argv) > 1 else UUID_V2
+    if not UUID.match(uuid):
+        emit({"modes": False,
+              "error": "%s (not a UUID: %r)" % (USAGE, uuid)})
+        sys.exit(EXIT_SETUP)
+    # The name is optional too, and only looks up a row in MODELS; an empty or
+    # unknown one is handled there, not here.
+    name = argv[2].strip() if len(argv) > 2 else ""
+
+    dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+    try:
+        bus = dbus.SystemBus()
+    except dbus.DBusException as error:
+        emit({"modes": False, "error": "no system bus: %s" % error.get_dbus_message()})
+        sys.exit(EXIT_TRANSIENT)
+
+    loop = GLib.MainLoop()
+    bridge = Bridge(bus, address, loop, uuid, name)
+
+    class Profile(dbus.service.Object):
+        @dbus.service.method("org.bluez.Profile1", in_signature="", out_signature="")
+        def Release(self):
+            # BlueZ has taken the registration away; without it no channel can
+            # be handed over, so this run is finished.
+            bridge.finish(EXIT_TRANSIENT, "BlueZ released the Sony profile")
+
+        @dbus.service.method("org.bluez.Profile1", in_signature="oha{sv}",
+                             out_signature="")
+        def NewConnection(self, path, fd, properties):
+            bridge.opened(fd.take())
+
+        @dbus.service.method("org.bluez.Profile1", in_signature="o", out_signature="")
+        def RequestDisconnection(self, path):
+            bridge.finish(EXIT_TRANSIENT, "the Sony channel closed")
+
+    Profile(bus, PROFILE_PATH)
+    bridge.listen_to_stdin()
+    bridge.register()
+
+    def stop(*_args):
+        # Being asked to go is the one ending that is not a failure, and only if
+        # nothing has already decided otherwise.
+        bridge.finish(0)
+        return False
+
+    unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, stop)
+    unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGINT, stop)
+
+    try:
+        if bridge.exit_code is None:
+            loop.run()
+    finally:
+        bridge.unregister()
+    sys.exit(bridge.exit_code or 0)
+
+
+if __name__ == "__main__":
+    arm_parent_death_signal()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except KeyboardInterrupt:
+        pass
+    except BaseException as error:
+        # Anything unforeseen leaves as a line the panel can show, instead of a
+        # traceback on a stderr nobody reads.
+        emit({"modes": False, "error": "%s: %s" % (type(error).__name__, error)})
+        sys.exit(EXIT_TRANSIENT)

@@ -1,13 +1,14 @@
 local terminal = "kitty"
 local browser = "firefox"
-local launcher = "fuzzel"
 local fileManager = "thunar"
+local cadrocbar_ipc = "qs -c cadrocbar ipc call"
+local restart_quickshell = "killall quickshell && quickshell -c cadrocbar & "
 local scripts = "$HOME/.config/scripts"
 
 hl.bind("SUPER + B", hl.dsp.exec_cmd(browser),{ description = "browser" })
 hl.bind("SUPER + E", hl.dsp.exec_cmd(fileManager),{ description = "file manager" })
 hl.bind("SUPER + RETURN", hl.dsp.exec_cmd(terminal),{ description = "terminal" })
-hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(launcher),{ description = "app launcher" })
+hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(cadrocbar_ipc .. " launcher toggleApps"),{ description = "app launcher" })
 
 hl.bind("SUPER + D", hl.dsp.exec_cmd("hyprctl reload"),{ description = "reload hyprland" })
 hl.bind("SUPER + L", hl.dsp.exec_cmd("hyprlock"),{ description = "lock screen" })
@@ -18,23 +19,24 @@ hl.bind("SUPER + X", hl.dsp.exec_cmd("kitty -e scrcpy"),{ description = "scrcpy"
 hl.bind("SUPER + Y", hl.dsp.exec_cmd("kitty --class elio -e elio"),{ description = "elio" })
 hl.bind("SUPER + P", hl.dsp.exec_cmd("kitty -e nmtui"),{ description = "nmtui" })
 hl.bind("SUPER + SHIFT + A", hl.dsp.exec_cmd("kitty -e bluetui"),{ description = "bluetui" })
-hl.bind("SUPER + O", hl.dsp.exec_cmd("wineserver -k"), { description = "close wine" })
+hl.bind("SUPER + O", hl.dsp.exec_cmd("wineserver -k"),{ description = "close wine" })
 
 hl.bind("SUPER + C", hl.dsp.exec_cmd(scripts .. "/hyprpicker.sh -hex"),{ description = "hyprpicker" })
-hl.bind("SUPER + G", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/run-scripts.sh"),{ description = "executa scripts listados" })
+hl.bind("SUPER + G", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/run-scripts.sh"))
 hl.bind("SUPER + A", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/hyprkeys.sh"),{ description = "show binds" })
-hl.bind("SUPER + I", hl.dsp.exec_cmd(scripts .. "/converter-imagens.sh"),{ description = "image format conversor" })
-hl.bind("SUPER + J", hl.dsp.exec_cmd(scripts .. "/extract-frames.sh"),{ description = "frames extractor" })
+hl.bind("SUPER + I", hl.dsp.exec_cmd(scripts .. "/converter_imagens.sh"),{ description = "image format conversor" })
+hl.bind("SUPER + J", hl.dsp.exec_cmd(scripts .. "/extract_frames.sh"),{ description = "frames extractor" })
 hl.bind("SUPER + K", hl.dsp.exec_cmd(scripts .. "/wlsunset.sh"),{ description = "wlsunset" })
 hl.bind("SUPER + M", hl.dsp.exec_cmd(scripts .. "/powermenu.sh"),{ description = "power menu" })
+hl.bind("SUPER + SHIFT + N", hl.dsp.exec_cmd(cadrocbar_ipc .. " notifications toggleDnd"),{ description = "do not disturb" })
 hl.bind("SUPER + N", hl.dsp.exec_cmd(scripts .. "/qr.sh"),{ description = "image downloader" })
-hl.bind("SUPER + R", hl.dsp.exec_cmd(scripts .. "/refresh-waybar.sh"),{ description = "reload waybar" })
+hl.bind("SUPER + R", hl.dsp.exec_cmd("quickshell -c cadrocbar &"),{ description = "reload quickshell" })
 hl.bind("SUPER + S", hl.dsp.exec_cmd(scripts .. "/calendar.sh"),{ description = "calendar notification" })
 hl.bind("SUPER + H", hl.dsp.exec_cmd(scripts .. "/random-wallpaper.sh"),{ description = "change wallpaper" })
 hl.bind("SUPER + Z", hl.dsp.exec_cmd(scripts .. "/take-screenshot.sh"),{ description = "capture with satty" })
-hl.bind("SUPER + V", hl.dsp.exec_cmd(scripts .. "/clipboard-toggle.sh"),{ description = "clipboard" })
-hl.bind("SUPER + SHIFT + G", hl.dsp.exec_cmd(scripts .. "/screen-recorder.sh"),{ description = "screen recorder" })
-hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd(scripts .. "/dashboard-toggle.sh"),{ description = "dashboard info" })
+hl.bind("SUPER + V", hl.dsp.exec_cmd(scripts .. "/clipboard_toggle.sh"),{ description = "clipboard" })
+hl.bind("SUPER + SHIFT + G", hl.dsp.exec_cmd(scripts .. "/screenrecord.sh"),{ description = "screen recorder" })
+hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd(scripts .. "/dashboard_toggle.sh"),{ description = "dashboard info" })
 
 hl.bind("SUPER + SHIFT + J", hl.dsp.window.fullscreen({ mode = "fullscreen" }),{ description = "window fullscreen" })
 hl.bind("SUPER + Q", hl.dsp.window.close(),{ description = "close window" })

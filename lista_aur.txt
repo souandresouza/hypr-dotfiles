@@ -1,8 +1,6 @@
 # ============================================================
-# Hyprland + DMS - pacotes AUR essenciais
+# Hyprland + Quickshell - pacotes AUR essenciais
 # ============================================================
 
 elio
 python-pywal
-wal-telegram-git
-waybar-git
