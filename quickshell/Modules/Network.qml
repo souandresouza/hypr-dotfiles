@@ -20,10 +20,12 @@ ModuleButton {
 
 	IconText {
 		glyph: root.glyph
-		text: NetworkService.state === 1 ? NetworkService.ssid : NetworkService.state === 2 ? "eth" : ""
+		text: NetworkService.state === 1
+			? NetworkService.ssid + "  " + NetworkService.signal + "%"
+			: NetworkService.state === 2 ? "eth" : ""
 		glyphColor: root.active ? Theme.accent : NetworkService.state === 0 ? Theme.sage : Theme.fg
 		textColor: Theme.fg
-		maxTextWidth: 90
+		maxTextWidth: 150
 	}
 
 	onClicked: {

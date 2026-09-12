@@ -66,35 +66,14 @@ Item {
 							Layout.alignment: Qt.AlignVCenter
 						}
 
-						Column {
+						Text {
+							text: "Rede"
+							font.family: Theme.fontFamily
+							font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+							font.weight: Font.Bold
+							color: Theme.fg
+							Layout.alignment: Qt.AlignVCenter
 							Layout.fillWidth: true
-							spacing: Theme.roundScaled(2, root.sf)
-
-							Text {
-								text: "Rede"
-								font.family: Theme.fontFamily
-								font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
-								font.weight: Font.Bold
-								color: Theme.fg
-							}
-
-							Text {
-								text: {
-									if (NetworkService.state === 1) {
-										if (NetworkService.ssid.length > 0)
-											return NetworkService.ssid + "  " + NetworkService.signal + "%";
-										return "Wi-Fi conectado";
-									}
-									if (NetworkService.state === 2)
-										return "Ethernet";
-									return "Sem conexão";
-								}
-								font.family: Theme.fontFamily
-								font.pixelSize: Theme.roundScaled(Theme.fontSizeSmall, root.sf)
-								color: Theme.stone
-								elide: Text.ElideRight
-								width: parent.width
-							}
 						}
 
 						Text {
