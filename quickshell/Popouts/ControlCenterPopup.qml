@@ -30,7 +30,7 @@ Item {
 			? Theme.roundScaled(88, root.sf)
 			: Theme.roundScaled(34, root.sf)
 
-		readonly property bool connected: network.ssid === NetworkService.ssid
+		readonly property bool connected: network.ssid != null && network.ssid.length > 0 && network.ssid === NetworkService.ssid
 
 		Rectangle {
 			anchors.fill: parent
@@ -60,7 +60,7 @@ Item {
 			}
 
 			Text {
-				text: network.ssid
+				text: network.ssid || ""
 				font.family: Theme.fontFamily
 				font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
 				font.weight: wifiRow.connected ? Font.Bold : Font.Normal
@@ -71,7 +71,7 @@ Item {
 			}
 
 			Text {
-				text: network.signal + "%"
+				text: (network.signal != null ? network.signal : 0) + "%"
 				font.family: Theme.fontFamily
 				font.pixelSize: Theme.roundScaled(Theme.fontSizeSmall, root.sf)
 				color: Theme.stone

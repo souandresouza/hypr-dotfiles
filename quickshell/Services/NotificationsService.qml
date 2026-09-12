@@ -41,9 +41,39 @@ Singleton {
 		return false;
 	}
 
-	property bool dndManual: false
+property bool dndManual: false
 	property bool dndFullscreen: true
 	property bool fullscreenActive: false
+
+	onDndManualChanged: root.writeState()
+	onDndFullscreenChanged: root.writeState()
+
+	readonly property string stateFile: "$HOME/.local/state/quickshell/notifications.state"
+
+	function writeState() {
+		stateProc.exec(["sh", "-c",
+			"mkdir -p $HOME/.local/state/quickshell && " +
+			"printf 'dndManual=%s\ndndFullscreen=%s\n' " +
+			(root.dndManual ? "true" : "false") + " " +
+			(root.dndFullscreen ? "true" : "false") + " > " + root.stateFile]);
+	}
+
+	Process {
+		id: stateProc
+		stdout: StdioCollector {
+			id: stateColl
+			waitForEnd: true
+		}
+		onExited: () => {
+			const text = stateColl.text.toString();
+			const m = text.match(/dndManual=(true|false)/);
+			const f = text.match(/dndFullscreen=(true|false)/);
+			if (m && (m[1] === "true") !== root.dndManual)
+				root.dndManual = m[1] === "true";
+			if (f && (f[1] === "true") !== root.dndFullscreen)
+				root.dndFullscreen = f[1] === "true";
+		}
+	}
 
 	readonly property bool dnd: root.dndManual || (root.dndFullscreen && root.fullscreenActive)
 	onDndChanged: {
@@ -295,7 +325,10 @@ time: now,
 		onTriggered: root.probeFullscreen()
 	}
 
-	Component.onCompleted: root.probeFullscreen()
+	Component.onCompleted: {
+		stateProc.exec(["sh", "-c", "cat " + root.stateFile + " 2>/dev/null"]);
+		root.probeFullscreen();
+	}
 
 	IpcHandler {
 		target: "notifications"

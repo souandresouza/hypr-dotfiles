@@ -10,6 +10,7 @@ Item {
 	required property var model
 	property real sf: 1
 	property bool toast: false
+	property bool entered: false
 
 	readonly property var entry: card.model
 		? NotificationsService.recordById(card.model.id)
@@ -25,6 +26,22 @@ Item {
 
 	Behavior on opacity {
 		NumberAnimation { duration: 180 }
+	}
+
+	transform: Translate {
+		id: slideTx
+		y: card.toast
+			? (card.entered ? 0 : Theme.roundScaled(-14, sf))
+			: 0
+
+		Behavior on y {
+			NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+		}
+	}
+
+	Component.onCompleted: {
+		if (card.toast)
+			Qt.callLater(() => (card.entered = true));
 	}
 
 	function cardColor() {
