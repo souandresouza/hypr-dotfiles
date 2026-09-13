@@ -2,6 +2,7 @@
 import json
 import subprocess
 
+
 def split_escaped(line):
     parts, cur = [], []
     i = 0
@@ -20,16 +21,36 @@ def split_escaped(line):
     parts.append("".join(cur))
     return parts
 
-def main():
-    try:
-        out = subprocess.run(
-            ["nmcli", "-t", "-e", "yes", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi"],
-            capture_output=True, text=True, timeout=5).stdout
-    except (subprocess.SubprocessError, OSError):
-        print("[]")
-        return
 
-    seen = {}
+def run_nmcli(args):
+    try:
+        return subprocess.run(
+            ["nmcli"] + args, capture_output=True, text=True, timeout=5).stdout
+    except (subprocess.SubprocessError, OSError):
+        return ""
+
+
+def get_saved_ssids():
+    out = run_nmcli(["-t", "-e", "yes", "-f", "NAME,TYPE", "con", "show"])
+    ssids = []
+    for raw in out.splitlines():
+        if not raw.strip():
+            continue
+        try:
+            name, ctype = split_escaped(raw)
+        except ValueError:
+            continue
+        if ctype != "802-11-wireless":
+            continue
+        ssid = run_nmcli(["-g", "802-11-wireless.ssid", "con", "show", name]).strip()
+        if ssid and ssid not in ssids:
+            ssids.append(ssid)
+    return ssids
+
+
+def main():
+    scan = {}
+    out = run_nmcli(["-t", "-e", "yes", "-f", "SSID,SIGNAL,SECURITY", "dev", "wifi"])
     for raw in out.splitlines():
         if not raw.strip():
             continue
@@ -37,19 +58,26 @@ def main():
             ssid, signal, security = split_escaped(raw)
         except ValueError:
             continue
-        if not ssid:
-            continue
-        signal = int(signal or 0)
-        if ssid not in seen or signal > seen[ssid][1]:
-            seen[ssid] = (ssid, signal, security)
+        if ssid and (ssid not in scan or int(signal or 0) > scan[ssid][0]):
+            scan[ssid] = (int(signal or 0), security)
 
-    result = [{
-        "ssid": s,
-        "signal": signal,
-        "secured": sec not in ("", "(none)", "none", "NONE"),
-    } for s, signal, sec in seen.values()]
+    saved = get_saved_ssids()
+    if not saved:
+        print("[]")
+        return
 
+    result = []
+    for ssid in saved:
+        signal, security = scan.get(ssid, (0, ""))
+        result.append({
+            "ssid": ssid,
+            "signal": signal,
+            "secured": security not in ("", "(none)", "none", "NONE"),
+        })
+
+    result.sort(key=lambda r: (-r["signal"], r["ssid"].lower()))
     print(json.dumps(result))
+
 
 if __name__ == "__main__":
     main()
