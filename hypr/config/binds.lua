@@ -40,7 +40,6 @@ hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd(scripts .. "/dashboard_toggle.sh"),
 
 hl.bind("SUPER + SHIFT + J", hl.dsp.window.fullscreen({ mode = "fullscreen" }),{ description = "window fullscreen" })
 hl.bind("SUPER + Q", hl.dsp.window.close(),{ description = "close window" })
---hl.bind("SUPER + F", hl.dsp.window.fullscreen({ mode = "maximized" }))
 
 -- Focus windows
 hl.bind("SUPER + left", hl.dsp.focus({ direction = "l" }),{ description = "focus left window" })
