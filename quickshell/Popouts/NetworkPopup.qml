@@ -31,6 +31,11 @@ Item {
 	}
 
 	function showQr() {
+		if (root.qrShow) {
+			root.qrShow = false;
+			root.qrSource = "";
+			return;
+		}
 		qrProc.exec(["sh", "-c", Theme.binDir + "/wifi.sh qr"]);
 	}
 
@@ -382,6 +387,7 @@ Item {
 						spacing: Theme.roundScaled(8, root.sf)
 
 						ModuleButton {
+							active: root.qrShow
 							accentColor: Theme.accent
 							height: Theme.roundScaled(26, root.sf)
 							width: Theme.roundScaled(26, root.sf)
