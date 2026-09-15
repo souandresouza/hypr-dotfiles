@@ -12,7 +12,7 @@
 Dotfiles focados em **Hyprland** + **Quickshell (cadrocbar)**.
 
 - Barra, launcher, centro e toasts de notificação feitos em **Quickshell/cadrocbar**;
-- Theming via **python-pywal** (`~/.cache/wal/colors.css` → `hypr/config/colors.lua`, `hyprlock.conf`);
+- Theming via **ruwall** (`~/.cache/wal/colors.css` → `hypr/config/colors.lua`, `hyprlock.conf`);
 - **mako**, **waybar** e **matugen** não fazem parte desta configuração.
 
 ## Estrutura
@@ -56,7 +56,7 @@ cd ~/hypr-dotfiles
 # Pacotes oficiais (inclui quickshell)
 ./install_pacman.sh
 
-# Pacotes AUR (quickshell deps extras, pywal etc.)
+# Pacotes AUR (quickshell deps extras, ruwall etc.)
 ./install_aur.sh
 ```
 

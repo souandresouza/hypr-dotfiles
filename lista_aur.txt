@@ -3,4 +3,5 @@
 # ============================================================
 
 elio
-python-pywal
+# python-pywal foi substituído pelo ruwall (port nativo em Rust)
+# instalar: cargo build --release; install -m755 target/release/ruwall ~/.local/bin/
