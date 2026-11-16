@@ -1,6 +1,6 @@
 local terminal = "kitty"
 local browser = "firefox"
-local fileManager = "thunar"
+local fileManager = "cadrocfile"
 local cadrocbar_ipc = "qs -c cadrocbar ipc call"
 local restart_quickshell = "killall quickshell && quickshell -c cadrocbar & "
 local scripts = "$HOME/.config/scripts"
