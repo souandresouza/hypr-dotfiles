@@ -94,4 +94,4 @@ hl.bind("XF86MonBrightnessDown",hl.dsp.exec_cmd("brightnessctl set 10%-"),{ desc
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),{ description = "Audio Next" })
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"),{ description = "Audio Pause" })
 hl.bind("XF86AudioPlay",  hl.dsp.exec_cmd("playerctl play-pause"),{ description = "Audio Play" })
-hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous",{ description = "Audio Previous" }))
+hl.bind("XF86AudioPrev",  hl.dsp.exec_cmd("playerctl previous"),{ description = "Audio Previous" })

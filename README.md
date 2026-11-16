@@ -76,6 +76,8 @@ Efetue logout e entre novamente na sessão do Hyprland.
 
 ## Workflow de cores
 
-1. `random-wallpaper.sh` (SUPER+H) roda `wal -i <imagem>` e aplica via `swaybg`;
-2. `hypr-colors.sh` gera `hypr/config/colors.lua` (bordas do Hyprland);
+1. `random-wallpaper.sh` (SUPER+H) roda `ruwall -i <imagem>` e aplica via `swaybg`;
+2. `hypr-colors.sh` lê `~/.cache/wal/colors.css` (gerado pelo `ruwall`) e atualiza `hypr/config/colors.lua` (bordas do Hyprland);
 3. `update-hyprlock.sh` regera `hyprlock.conf` com o wallpaper atual.
+
+> Usa os projetos pessoais `ruwall` (geração de paleta) e `cadrocfile`/`quickshell` (cadrocbar) como base do fluxo.

@@ -1,10 +1,5 @@
-local colors = require("config.colors") 
+local palette = require("config.colors")
 local gaps = 6
-local colors = {
-    background = colors.inactive_border,
-    inactive   = colors.inactive_border,
-    active     = colors.active_border,
-}
 
 hl.config({
     general = {
@@ -14,13 +9,13 @@ hl.config({
         resize_on_border = false,
         allow_tearing = false,
         layout = "dwindle",
-        
+
         col = {
-            active_border = colors.active_border,
-            inactive_border = colors.inactive_border,
+            active_border = palette.active_border,
+            inactive_border = palette.inactive_border,
         },
     },
-    
+
     decoration = {
         rounding = 2,
         active_opacity = 1,
@@ -29,7 +24,7 @@ hl.config({
             enabled = true,
             range = 30,
             render_power = 4,
-            color = colors.inactive_border,
+            color = palette.inactive_border,
         },
         blur = {
             enabled = true,
@@ -38,11 +33,11 @@ hl.config({
             vibrancy = 0.5
         }
     },
-    
+
     animations = {
         enabled = true
     },
-    
+
     misc = {
         disable_hyprland_logo = true,
         font_family = "JetBrainsMono Nerd Font",
@@ -50,4 +45,4 @@ hl.config({
     }
 })
 
-return colors
+return palette

@@ -100,7 +100,7 @@ main() {
         cp "$chosen" "$CURRENT_WALLPAPER" 2>/dev/null || true
 
         # Regenera o tema de cores baseado no wallpaper
-        wal -i "$chosen" >/dev/null 2>&1 || true
+        ruwall -i "$chosen" >/dev/null 2>&1 || true
 
         notify-send "Wallpaper" "$(basename "$chosen")" -i "$chosen" 2>/dev/null || true
     else

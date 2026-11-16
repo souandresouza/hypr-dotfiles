@@ -9,7 +9,7 @@ if [ ! -f "$COLORS_FILE" ]; then
     exit 1
 fi
 
-# Extrair cores do formato Pywal/CSS (--color0: #xxx;)
+# Extrair cores do formato pywal/ruwall CSS (--color0: #xxx;)
 extract_color() {
     grep -- "--color$1:" "$COLORS_FILE" | head -1 | awk -F': ' '{print $2}' | tr -d '; '
 }
