@@ -119,7 +119,7 @@ mkdir -p "$HOME/.config"
 
 # Copy configurations
 log_info "Copying configurations..."
-CONFIG_DIRS=(hypr scripts)
+CONFIG_DIRS=(hypr mango scripts)
 
 for dir in "${CONFIG_DIRS[@]}"; do
     if [[ -d "$DOTFILES/$dir" ]]; then
@@ -160,6 +160,7 @@ log_info "Setting executable permissions..."
 chmod +x "$HOME/.config/scripts"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/scripts/colors"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/hypr/scripts"/*.sh 2>/dev/null || true
+chmod +x "$HOME/.config/mango/scripts"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/quickshell"/*/scripts/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/quickshell/scripts"/*.py 2>/dev/null || true
 chmod +x "$HOME/.config/quickshell/scripts"/*.sh 2>/dev/null || true

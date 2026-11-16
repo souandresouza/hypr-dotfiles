@@ -7,6 +7,7 @@ set -euo pipefail
 WALLPAPER_DIR="$HOME/.config/wallpapers"
 CACHE_DIR="$HOME/.cache/wallpapers"
 HISTORY_FILE="$CACHE_DIR/wallpaper_history.txt"
+CYCLE_FILE="$CACHE_DIR/wallpaper_cycle.txt"
 CURRENT_WALLPAPER="$HOME/.cache/current_wallpaper.png"
 HISTORY_SIZE=10
 
@@ -14,23 +15,23 @@ HISTORY_SIZE=10
 # FUNÇÕES
 # ============================================
 
-# Detecta resolução da tela
+# Detecta resolução da tela do monitor em foco.
+# 1) mmsg (IPC do mangowm) — fonte canônica; 2) wlr-randr — qualquer wlroots.
 detect_resolution() {
     local res=""
 
-    if command -v hyprctl &>/dev/null && command -v jq &>/dev/null; then
-        local hypr_output=$(hyprctl monitors -j 2>/dev/null 2>&1)
-        if [[ -n "$hypr_output" ]] && echo "$hypr_output" | jq -e . >/dev/null 2>&1; then
-            res=$(echo "$hypr_output" | jq -r '.[] | select(.focused == true) | "\(.width)x\(.height)"' 2>/dev/null | head -1)
+    if command -v mmsg &>/dev/null && command -v jq &>/dev/null; then
+        local mango_output
+        mango_output=$(mmsg get all-monitors 2>/dev/null) || mango_output=""
+        if [[ -n "$mango_output" ]] && echo "$mango_output" | jq -e . >/dev/null 2>&1; then
+            res=$(echo "$mango_output" |
+                jq -r '(.monitors | map(select(.active)) | .[0]) // .monitors[0] | "\(.width)x\(.height)"' 2>/dev/null |
+                head -1)
         fi
     fi
 
     if [[ -z "$res" ]] && command -v wlr-randr &>/dev/null; then
         res=$(wlr-randr 2>/dev/null | grep -oP 'current mode: \K\d+x\d+' | head -1)
-    fi
-
-    if [[ -z "$res" ]] && command -v xrandr &>/dev/null; then
-        res=$(xrandr --current 2>/dev/null | grep '*' | head -1 | awk '{print $1}')
     fi
 
     echo "${res:-1920x1080}"
@@ -41,6 +42,7 @@ ensure_directories() {
     mkdir -p "$CACHE_DIR"
     mkdir -p "$(dirname "$CURRENT_WALLPAPER")"
     touch "$HISTORY_FILE"
+    touch "$CYCLE_FILE"
 }
 
 # Obtém o wallpaper atual do histórico
@@ -58,14 +60,16 @@ list_available_wallpapers() {
         return 1
     fi
 
-    find "$WALLPAPER_DIR" -maxdepth 1 -type f \( \
+    find -L "$WALLPAPER_DIR" -maxdepth 1 -type f \( \
         -iname "*.jpg" -o -iname "*.jpeg" \
         -o -iname "*.png" -o -iname "*.gif" \
         -o -iname "*.webp" -o -iname "*.bmp" \
     \) -print0 2>/dev/null | sort -z | xargs -0 -n1 echo
 }
 
-# Seleciona wallpaper aleatório diferente do atual
+# Seleciona um wallpaper aleatório sem repetir até esgotar o ciclo.
+# O ciclo é persistido em CYCLE_FILE para sobreviver a reinícios; quando todos
+# os wallpapers já foram usados, um novo ciclo começa (sem repetir o último).
 select_wallpaper() {
     local all_wallpapers=()
     while IFS= read -r file; do
@@ -79,24 +83,86 @@ select_wallpaper() {
 
     echo "📸 Encontrados ${#all_wallpapers[@]} wallpapers" >&2
 
-    local current=$(get_current_wallpaper)
+    local current
+    current="$(get_current_wallpaper)"
     if [[ -n "$current" ]]; then
         echo "🖼️  Wallpaper atual: $(basename "$current")" >&2
     fi
 
-    # Remove o wallpaper atual da lista
+    # Wallpapers já usados no ciclo atual (ignora entradas que não existem mais)
+    local used=()
+    local line w u found
+    if [[ -f "$CYCLE_FILE" ]]; then
+        while IFS= read -r line; do
+            if [[ -z "$line" ]]; then
+                continue
+            fi
+            found=0
+            for w in "${all_wallpapers[@]}"; do
+                if [[ "$line" == "$w" ]]; then
+                    found=1
+                    break
+                fi
+            done
+            if (( found )); then
+                used+=("$line")
+            fi
+        done < "$CYCLE_FILE"
+    fi
+
+    # Disponíveis = todos - usados no ciclo atual
     local available=()
     for w in "${all_wallpapers[@]}"; do
-        [[ "$w" != "$current" ]] && available+=("$w")
+        found=0
+        for u in "${used[@]}"; do
+            if [[ "$w" == "$u" ]]; then
+                found=1
+                break
+            fi
+        done
+        if (( ! found )); then
+            available+=("$w")
+        fi
     done
 
-    # Se não há wallpapers diferentes, usa qualquer um
     if [[ ${#available[@]} -eq 0 ]]; then
-        available=("${all_wallpapers[@]}")
+        # Ciclo esgotado: começa outro, evitando o último wallpaper aplicado
+        if [[ ${#all_wallpapers[@]} -gt 1 ]]; then
+            echo "🔁 Ciclo completo, começando novo ciclo" >&2
+        fi
+        used=()
+        for w in "${all_wallpapers[@]}"; do
+            if [[ "$w" != "$current" ]]; then
+                available+=("$w")
+            fi
+        done
+        if [[ ${#available[@]} -eq 0 ]]; then
+            available=("${all_wallpapers[@]}")
+        fi
+    elif [[ ${#available[@]} -gt 1 && -n "$current" ]]; then
+        # Ainda no ciclo, mas evita repetir o aplicado agora (ex.: troca manual)
+        local filtered=()
+        for w in "${available[@]}"; do
+            if [[ "$w" != "$current" ]]; then
+                filtered+=("$w")
+            fi
+        done
+        if [[ ${#filtered[@]} -gt 0 ]]; then
+            available=("${filtered[@]}")
+        fi
     fi
 
     local idx=$((RANDOM % ${#available[@]}))
     local selected="${available[$idx]}"
+
+    # Persiste o ciclo já com o wallpaper escolhido
+    {
+        if [[ ${#used[@]} -gt 0 ]]; then
+            printf '%s\n' "${used[@]}"
+        fi
+        printf '%s\n' "$selected"
+    } > "$CYCLE_FILE"
+
     echo "🎯 Selecionado: $(basename "$selected")" >&2
     echo "$selected"
 }
@@ -177,7 +243,8 @@ main() {
     # Cria cópia do wallpaper
     cp "$SELECTED" "$CURRENT_WALLPAPER" 2>/dev/null || true
 
-    ruwall -i "$SELECTED"
+    # Gera a paleta e atualiza as cores de todos os apps (uma única fonte).
+    "$HOME/.config/scripts/run-scripts.sh" "$SELECTED"
     echo "✨ Concluído!" >&2
 }
 

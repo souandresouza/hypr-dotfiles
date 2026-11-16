@@ -1,1 +1,2 @@
-pkill -f clipboard.sh || kitty --app-id=clipboard -e bash /home/andre/.config/scripts/clipboard.sh
+#!/bin/bash
+pkill -f clipboard.sh || kitty --app-id=clipboard -e bash "$HOME/.config/scripts/clipboard.sh"

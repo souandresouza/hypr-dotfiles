@@ -22,10 +22,10 @@ hl.bind("SUPER + SHIFT + A", hl.dsp.exec_cmd("kitty -e bluetui"),{ description =
 hl.bind("SUPER + O", hl.dsp.exec_cmd("wineserver -k"),{ description = "close wine" })
 
 hl.bind("SUPER + C", hl.dsp.exec_cmd(scripts .. "/hyprpicker.sh -hex"),{ description = "hyprpicker" })
-hl.bind("SUPER + G", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/run-scripts.sh"))
+hl.bind("SUPER + G", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/run-scripts.sh"),{ description = "aplicar tema/cores (hypr)" })
 hl.bind("SUPER + A", hl.dsp.exec_cmd("$HOME/.config/hypr/scripts/hyprkeys.sh"),{ description = "show binds" })
-hl.bind("SUPER + I", hl.dsp.exec_cmd(scripts .. "/converter_imagens.sh"),{ description = "image format conversor" })
-hl.bind("SUPER + J", hl.dsp.exec_cmd(scripts .. "/extract_frames.sh"),{ description = "frames extractor" })
+hl.bind("SUPER + I", hl.dsp.exec_cmd(scripts .. "/images_convert.sh"),{ description = "image format conversor" })
+hl.bind("SUPER + J", hl.dsp.exec_cmd(scripts .. "/video_frames_extract.sh"),{ description = "frames extractor" })
 hl.bind("SUPER + K", hl.dsp.exec_cmd(scripts .. "/wlsunset.sh"),{ description = "wlsunset" })
 hl.bind("SUPER + M", hl.dsp.exec_cmd(scripts .. "/powermenu.sh"),{ description = "power menu" })
 hl.bind("SUPER + SHIFT + N", hl.dsp.exec_cmd(cadrocbar_ipc .. " notifications toggleDnd"),{ description = "do not disturb" })
@@ -35,7 +35,7 @@ hl.bind("SUPER + S", hl.dsp.exec_cmd(scripts .. "/calendar.sh"),{ description = 
 hl.bind("SUPER + H", hl.dsp.exec_cmd(scripts .. "/random-wallpaper.sh"),{ description = "change wallpaper" })
 hl.bind("SUPER + Z", hl.dsp.exec_cmd(scripts .. "/take-screenshot.sh"),{ description = "capture with satty" })
 hl.bind("SUPER + V", hl.dsp.exec_cmd(scripts .. "/clipboard_toggle.sh"),{ description = "clipboard" })
-hl.bind("SUPER + SHIFT + G", hl.dsp.exec_cmd(scripts .. "/screenrecord.sh"),{ description = "screen recorder" })
+hl.bind("SUPER + SHIFT + G", hl.dsp.exec_cmd(scripts .. "/record.sh"),{ description = "screen recorder" })
 hl.bind("SUPER + SHIFT + B", hl.dsp.exec_cmd(scripts .. "/dashboard_toggle.sh"),{ description = "dashboard info" })
 
 hl.bind("SUPER + SHIFT + J", hl.dsp.window.fullscreen({ mode = "fullscreen" }),{ description = "window fullscreen" })
