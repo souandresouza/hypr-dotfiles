@@ -58,10 +58,13 @@ fi
 
 mkdir -p "$(dirname "$HYPR_FILE")"
 
+active_hex="$(clean_color "$color15")"
+inactive_hex="$(clean_color "$color0")"
+
 cat >"$HYPR_FILE" <<EOF
 local colors = {
-    active_border = "rgba(${color15}ee)",
-    inactive_border = "rgba(${color0}aa)"
+    active_border = "rgba(${active_hex}ee)",
+    inactive_border = "rgba(${inactive_hex}aa)"
 }
 
 return colors
