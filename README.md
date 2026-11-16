@@ -1,6 +1,6 @@
 <div align="center">
 
-# Hyprland + MangoWC Dotfiles
+# Hyprland + Quickshell Dotfiles
 
 ![Arch](https://img.shields.io/badge/OS-Arch_Linux-1793d1?style=flat-square&logo=archlinux&logoColor=white)
 ![Wayland](https://img.shields.io/badge/Protocol-Wayland-ffbc42?style=flat-square&logo=wayland&logoColor=white)
@@ -9,12 +9,12 @@
 
 ## Sobre
 
-Dotfiles para **Hyprland** e **MangoWC**, com componentes compartilhados.
+Dotfiles **exclusivos do Hyprland**, com **Quickshell (cadrocbar)** e theming via **ruwall**.
 
-- **Comum**: `scripts/`, `quickshell/` (cadrocbar) e `quickshell-scripts/` (temas via **ruwall**, utilitários, launcher/notificações quando aplicável).
-- **Hyprland**: `hypr/` (config Lua 0.55+/0.57, binds/regras/scripts exclusivos do Hyprland, `hyprlock`/`hypridle`).
-- **MangoWC**: `mango/` (config do MangoWC, binds/regras/tema e scripts exclusivos como `mango/scripts/mango-keys.sh`). `monitor.conf` é específico da máquina (ignorado no git); use `mango/monitor.conf.example` como base. `theme.conf` é gerado pelo pipeline de cores (`run-scripts.sh`/`mango-colors.sh`).
-- Theming principal via **ruwall** (cache em `~/.cache/wal/*`), reutilizado pelos perfis e scripts de cores.
+- Configuração do Hyprland em Lua (`hypr/`, compatível com 0.55+/0.57), `hyprlock` e `hypridle`.
+- Barra, launcher, popups e notificações em **Quickshell/cadrocbar** (`quickshell/` + `quickshell-scripts/`).
+- Scripts/utilitários e pipeline de cores em `scripts/`, usando os projetos pessoais **ruwall** e **cadrocfile** quando aplicável.
+- Para **MangoWC**, use o repositório [cadrocspace](https://github.com/souandresouza/cadrocspace).
 
 ## Estrutura
 
@@ -22,12 +22,10 @@ Dotfiles para **Hyprland** e **MangoWC**, com componentes compartilhados.
 hypr-dotfiles/
 ├── hypr/                  # Configuração do Hyprland (Lua) + scripts exclusivos
 │   └── scripts/           #   hypr-colors.sh, hyprkeys.sh, run-scripts.sh
-├── mango/                 # Configuração do MangoWC + scripts exclusivos
-│   └── scripts/           #   mango-keys.sh
 ├── quickshell/            # Config do cadrocbar (Bar.qml, Services/, Popouts/...)
 ├── quickshell-scripts/    # Scripts chamados pelos serviços do quickshell
-├── scripts/               # Scripts/utilitários compartilhados (→ ~/.config/scripts)
-│   └── colors/            #   temas por app (ruwall/pywal cache), incl. mango-colors.sh
+├── scripts/               # Scripts/utilitários do ambiente Hyprland (→ ~/.config/scripts)
+│   └── colors/            #   temas por app a partir do cache do ruwall
 ├── install.sh             # Copia as configs para ~/.config/
 └── lista_{pacman,aur}.txt # Pacotes
 ```
@@ -70,18 +68,18 @@ cd ~/hypr-dotfiles
 ./install.sh
 ```
 
-O `install.sh` verifica as dependências (`git`, `curl`, `yay`), copia `hypr/`, `mango/`, `scripts/`, `quickshell/` e `quickshell-scripts/` para `~/.config/` e ajusta permissões de execução.
+O `install.sh` verifica as dependências (`git`, `curl`, `yay`), copia `hypr/`, `scripts/`, `quickshell/` e `quickshell-scripts/` para `~/.config/` e ajusta permissões de execução.
 
 ### 4. Reiniciar
 
-Efetue logout e entre novamente na sessão desejada (Hyprland ou MangoWC).
+Efetue logout e entre novamente na sessão do Hyprland.
 
 > 💡 As configurações são instaladas por **cópia**, não por link simbólico. Para modificar, edite em `~/.config/` e mantenha este repositório atualizado (ou edite direto aqui).
 
 ## Workflow de cores
 
-- `random-wallpaper.sh` aplica o wallpaper (swaybg) e aciona `scripts/run-scripts.sh`, que gera a paleta com **`ruwall`** (`~/.cache/wal/*`) e atualiza os temas dos apps (incluindo `mango-colors.sh` quando aplicável).
-- Para o perfil **Hyprland**, `hypr/scripts/hypr-colors.sh` lê `~/.cache/wal/colors.css` e atualiza `hypr/config/colors.lua`, e `scripts/colors/update-hyprlock.sh` pode regenerar o `hyprlock.conf` com base no wallpaper/cores.
-- `select-wallpaper.sh` (quando usado) seleciona/aplica wallpaper e regenera paleta com `ruwall`.
+- `random-wallpaper.sh` aplica o wallpaper (swaybg) e aciona `scripts/run-scripts.sh`, que gera a paleta com **`ruwall`** (`~/.cache/wal/*`) e atualiza os temas dos apps.
+- Para o **Hyprland**, `hypr/scripts/hypr-colors.sh` lê `~/.cache/wal/colors.css` e atualiza `hypr/config/colors.lua`, e `scripts/colors/update-hyprlock.sh` pode regenerar o `hyprlock.conf` com base no wallpaper/cores.
+- `select-wallpaper.sh` (quando usado) seleciona/aplica wallpaper e regenera a paleta com `ruwall`.
 
-> Usa os projetos pessoais **`ruwall`** (geração de paleta) e **`cadrocfile`**/**quickshell** (cadrocbar) como base do fluxo. Scripts exclusivos de compositor ficam em `hypr/scripts/` e `mango/scripts/`.
+> Usa os projetos pessoais **`ruwall`** (geração de paleta) e **`cadrocfile`**/**quickshell** (cadrocbar) como base do fluxo. Scripts exclusivos do Hyprland ficam em `hypr/scripts/`.

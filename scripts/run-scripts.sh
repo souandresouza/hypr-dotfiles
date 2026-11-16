@@ -59,7 +59,7 @@ run_color() {
     "$script" || echo "run-scripts: aviso: ${name}-colors.sh falhou" >&2
 }
 
-apps=(cava cadroc fastfetch fuzzel kitty mango swaylock swaync waybar zathura)
+apps=(cava cadroc fastfetch fuzzel kitty zathura)
 
 for app in "${apps[@]}"; do
     run_color "$app"

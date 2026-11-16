@@ -119,7 +119,7 @@ mkdir -p "$HOME/.config"
 
 # Copy configurations
 log_info "Copying configurations..."
-CONFIG_DIRS=(hypr mango scripts)
+CONFIG_DIRS=(hypr scripts)
 
 for dir in "${CONFIG_DIRS[@]}"; do
     if [[ -d "$DOTFILES/$dir" ]]; then
@@ -129,12 +129,6 @@ for dir in "${CONFIG_DIRS[@]}"; do
         log_warn "$dir not found in dotfiles"
     fi
 done
-
-# MangoWC: cria monitor.conf a partir do exemplo se não existir (específico da máquina)
-if [[ -d "$HOME/.config/mango" && ! -f "$HOME/.config/mango/monitor.conf" && -f "$HOME/.config/mango/monitor.conf.example" ]]; then
-    cp "$HOME/.config/mango/monitor.conf.example" "$HOME/.config/mango/monitor.conf"
-    log_info "Criado ~/.config/mango/monitor.conf a partir do exemplo (ajuste para sua máquina)"
-fi
 
 # Quickshell (cadrocbar bar / toasts / notifications)
 log_info "Setting up Quickshell config..."
@@ -166,7 +160,6 @@ log_info "Setting executable permissions..."
 chmod +x "$HOME/.config/scripts"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/scripts/colors"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/hypr/scripts"/*.sh 2>/dev/null || true
-chmod +x "$HOME/.config/mango/scripts"/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/quickshell"/*/scripts/*.sh 2>/dev/null || true
 chmod +x "$HOME/.config/quickshell/scripts"/*.py 2>/dev/null || true
 chmod +x "$HOME/.config/quickshell/scripts"/*.sh 2>/dev/null || true
