@@ -21,9 +21,6 @@ hl.config({
         no_warps = false,
         persistent_warps = true,
     },
-    gestures = {
-        workspace_swipe_touch = false,
-    },
     xwayland = {
         force_zero_scaling = true,
     },
