@@ -13,7 +13,7 @@ Dotfiles para **Hyprland** e **MangoWC**, com componentes compartilhados.
 
 - **Comum**: `scripts/`, `quickshell/` (cadrocbar) e `quickshell-scripts/` (temas via **ruwall**, utilitários, launcher/notificações quando aplicável).
 - **Hyprland**: `hypr/` (config Lua 0.55+/0.57, binds/regras/scripts exclusivos do Hyprland, `hyprlock`/`hypridle`).
-- **MangoWC**: `mango/` (config do MangoWC, binds/regras/tema e scripts exclusivos como `mango/scripts/mango-keys.sh`).
+- **MangoWC**: `mango/` (config do MangoWC, binds/regras/tema e scripts exclusivos como `mango/scripts/mango-keys.sh`). `monitor.conf` é específico da máquina (ignorado no git); use `mango/monitor.conf.example` como base. `theme.conf` é gerado pelo pipeline de cores (`run-scripts.sh`/`mango-colors.sh`).
 - Theming principal via **ruwall** (cache em `~/.cache/wal/*`), reutilizado pelos perfis e scripts de cores.
 
 ## Estrutura

@@ -130,6 +130,12 @@ for dir in "${CONFIG_DIRS[@]}"; do
     fi
 done
 
+# MangoWC: cria monitor.conf a partir do exemplo se não existir (específico da máquina)
+if [[ -d "$HOME/.config/mango" && ! -f "$HOME/.config/mango/monitor.conf" && -f "$HOME/.config/mango/monitor.conf.example" ]]; then
+    cp "$HOME/.config/mango/monitor.conf.example" "$HOME/.config/mango/monitor.conf"
+    log_info "Criado ~/.config/mango/monitor.conf a partir do exemplo (ajuste para sua máquina)"
+fi
+
 # Quickshell (cadrocbar bar / toasts / notifications)
 log_info "Setting up Quickshell config..."
 if [[ -d "$DOTFILES/quickshell" ]]; then

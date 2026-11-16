@@ -1,11 +1,5 @@
-# Sistema / editor
-.DS_Store
-*.swp
-*~
+# Máquina/local (ajuste por instalação)
+mango/monitor.conf
 
-# Python
-__pycache__/
-*.pyc
-
-# Caches
-.cache/
+# Caches/artefatos locais
+*.log
