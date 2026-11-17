@@ -74,7 +74,7 @@ O `install.sh` verifica as dependências (`git`, `curl`, `yay`), copia `hypr/`, 
 
 Efetue logout e entre novamente na sessão do Hyprland.
 
-> 💡 As configurações são instaladas por **cópia**, não por link simbólico. Para modificar, edite em `~/.config/` e rode `./sync.sh` para espelhar `hypr/`, `scripts/`, `quickshell/` e `quickshell-scripts/` no repositório (scripts exclusivos do ambiente local ficam de fora). Use `./sync.sh -n` para simular.
+> 💡 As configurações são instaladas por **cópia**, não por link simbólico. Para modificar, edite em `~/.config/` e rode `./sync.sh` para espelhar `hypr/`, `scripts/`, `quickshell/` e `quickshell-scripts/` no repositório. Use `./sync.sh -n` para simular.
 
 ## Workflow de cores
 

@@ -32,22 +32,8 @@ fi
 rsync_flags=(-a --delete)
 [[ "$DRY" == true ]] && rsync_flags+=(-n)
 
-# Scripts que existem na máquina mas são específicos do ambiente local
-# (MangoWM, waybar, lock/unlock antigos) e não devem ir para o repositório.
+# Só cache local do Python não vai para o repositório.
 script_excludes=(
-	--exclude "detect-monitors.sh"
-	--exclude "idle_inhibit.sh"
-	--exclude "idle_start.sh"
-	--exclude "lock.sh"
-	--exclude "osk.sh"
-	--exclude "polkit-agent.sh"
-	--exclude "refresh-waybar.sh"
-	--exclude "unlock.sh"
-	--exclude "colors/mako-colors.sh"
-	--exclude "colors/mango-colors.sh"
-	--exclude "colors/swaylock-colors.sh"
-	--exclude "colors/swaync-colors.sh"
-	--exclude "colors/waybar-colors.sh"
 	--exclude "__pycache__/"
 )
 
