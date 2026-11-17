@@ -187,10 +187,10 @@ stop_recording() {
 # neste caso pergunta qual monitor gravar (a menos que REC_OPTS já defina um).
 pick_output() {
     if [[ " $REC_OPTS " =~ [[:space:]](-o|--output|-g|--geometry)([[:space:]=]) ]]; then return 0; fi
-    command -v wlr-randr >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || return 0
+    command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1 || return 0
 
     local outs=()
-    mapfile -t outs < <(wlr-randr --json 2>/dev/null | jq -r '.[] | select(.enabled) | .name')
+    mapfile -t outs < <(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.disabled != true) | .name')
     (( ${#outs[@]} > 1 )) || return 0
 
     local out
@@ -276,7 +276,7 @@ start_recording() {
 # gpu-screen-recorder (codegen alternative, JOGO/CPU com encoder HW)
 # Mesclado do antigo ~/.config/scripts/screen_recorder.sh.
 # Usa os mesmos /tmp/recording_pid e /tmp/recording_time, então o
-# módulo custom/recorder da waybar funciona igual para os dois motores.
+# módulo de gravação da barra funciona igual para os dois motores.
 # ============================================================
 GPU_RECORD_DIR=${GPU_RECORD_DIR:-"$SCREENREC_SAVE_DIR/Recordings"}
 GPU_TEMP_FILE="/tmp/screen_recorder_last.txt"
@@ -337,7 +337,7 @@ gpu_start_recording() {
         rm -f /tmp/recording_pid /tmp/recording_time
     ' _ "$gsr_pid" >/dev/null 2>&1
 
-    # Fica no foreground até a gravação terminar (ícone da waybar sai junto)
+    # Fica no foreground até a gravação terminar (o ícone da barra sai junto)
     while kill -0 "$gsr_pid" 2>/dev/null; do sleep 1; done
     rm -f "$PID_FILE" "$TIME_FILE"
 }
@@ -346,7 +346,7 @@ gpu_start_recording() {
 # MAIN
 # ============================================================
 
-# O módulo custom/recorder da waybar chama este script ao clicar, então
+# O módulo de gravação da barra chama este script ao clicar, então
 # qualquer motor ativo é encerrado por aqui.
 if gpu_recording_active; then
     gpu_stop_recording

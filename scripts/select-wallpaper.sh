@@ -1,7 +1,7 @@
 #!/bin/bash
 # ~/.config/scripts/select-wallpaper.sh
 # Seletor de wallpaper para as imagens de ~/.config/wallpapers
-# Usa fuzzel (fallback: rofi) para escolha, aplica com swaybg e
+# Usa fuzzel para escolha, aplica com swaybg e
 # mantém o histórico/cache consistente com random-wallpaper.sh.
 #
 # Uso:
@@ -64,10 +64,8 @@ pick_wallpaper() {
     local selected=""
     if command -v fuzzel &>/dev/null; then
         selected=$(printf '%s\n' "$all" | fuzzel --dmenu --prompt "Wallpaper: " --only-match 2>/dev/null || true)
-    elif command -v rofi &>/dev/null; then
-        selected=$(printf '%s\n' "$all" | rofi -dmenu -i -p "Wallpaper: " 2>/dev/null || true)
     else
-        echo "Nenhum launcher (fuzzel/rofi) disponível" >&2
+        echo "fuzzel não encontrado" >&2
         return 1
     fi
 

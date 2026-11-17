@@ -20,5 +20,5 @@ bar=""
 for ((i=0; i<filled; i++)); do bar="${bar}█"; done
 for ((i=0; i<empty; i++)); do bar="${bar}░"; done
 
-# Saída no formato JSON para Waybar
+# Saída em texto: percentual + barra
 echo "${progress}% ${bar}"

@@ -313,8 +313,11 @@ create_palette() {
         _convert -size 256x256 "xc:$color0" tiled.jpg;
     elif [[ "$bg_mode" = "background" ]]; then
         img_size=$(_identify -format "%w" "${bg_mode}.${bg_ext}")
-        # Maior largura entre os monitores, via IPC do mango (sem xrandr/X11).
-        screen_size=$(mmsg get all-monitors 2>/dev/null | jq -r '[.monitors[].width] | max // empty' 2>/dev/null)
+        # Maior largura entre os monitores (Hyprland); fallback 1920.
+        screen_size=""
+        if command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+            screen_size=$(hyprctl monitors -j 2>/dev/null | jq -r '[.[].width] | max // empty' 2>/dev/null)
+        fi
         [[ -n "$screen_size" ]] || screen_size=1920
         # shellcheck disable=SC2086
         _convert ${bg_mode}.${bg_ext} $blur -resize $(( img_size > screen_size ? img_size : screen_size )) ${bg_mode}_tmp.jpg

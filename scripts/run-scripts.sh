@@ -75,9 +75,6 @@ fi
 if [[ -f "$HOME/.config/qBittorrent/themes/pywal/stylesheet.qss.tpl" ]]; then
     run_color qbittorrent
 fi
-if command -v makoctl >/dev/null 2>&1; then
-    run_color mako
-fi
 if command -v wal-telegram >/dev/null 2>&1 || pacman -Q wal-telegram-git >/dev/null 2>&1; then
     run_color telegram
 fi

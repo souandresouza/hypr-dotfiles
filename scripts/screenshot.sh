@@ -15,9 +15,7 @@ TESSDATA_USER="$HOME/.local/share/tesseract/tessdata"
 
 # ========= DETECT COMPOSITOR =========
 detect_compositor() {
-  if command -v mango >/dev/null 2>&1 && [[ -n "$(pgrep -x mango 2>/dev/null)" ]]; then
-    echo "mango"
-  elif command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
+  if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
     echo "hyprland"
   else
     echo "unknown"
@@ -27,57 +25,9 @@ detect_compositor() {
 COMPOSITOR=$(detect_compositor)
 
 # ========= GET ACTIVE WINDOW GEOMETRY =========
-# O MangoWM expõe um socket IPC que responde JSON:
-#   get focusing-client -> {"x":..,"y":..,"width":..,"height":..,...}
-# Não existe CLI pronto, então falamos com o socket via python3.
-mango_socket() {
-  local pid
-  pid=$(pgrep -x mango 2>/dev/null | head -1) || return 1
-  [[ -n "$pid" ]] || return 1
-  local sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/mango-${pid}.sock"
-  [[ -S "$sock" ]] || return 1
-  printf '%s' "$sock"
-}
-
+# `hyprctl activewindow -j` devolve "at" e "size" da janela focada.
 get_window_geom() {
   case "$COMPOSITOR" in
-    mango)
-      local sock
-      sock=$(mango_socket) || return 1
-
-      local resp
-      resp=$(printf 'get focusing-client\n' | timeout 2 python3 -c '
-import socket, sys
-sock = sys.argv[1]
-s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-s.settimeout(1.5)
-s.connect(sock)
-s.sendall(b"get focusing-client\n")
-buf = b""
-while not buf.endswith(b"\n"):
-    chunk = s.recv(4096)
-    if not chunk:
-        break
-    buf += chunk
-sys.stdout.write(buf.decode(errors="replace"))
-' "$sock" 2>/dev/null) || return 1
-
-      [[ -n "$resp" ]] || return 1
-      # Erro do WM (ex.: nenhuma janela focada). Usa 'if' porque com
-      # '&& return 1' o último comando do case viraria o status da função.
-      if [[ "$resp" == *'"error"'* ]]; then
-        return 1
-      fi
-
-      printf '%s' "$resp" | python3 -c '
-import json, sys
-d = json.load(sys.stdin)
-w, h = int(d["width"]), int(d["height"])
-if w <= 0 or h <= 0:
-    sys.exit(1)
-print("%d,%d %dx%d" % (int(d["x"]), int(d["y"]), w, h))
-' 2>/dev/null
-      ;;
     hyprland)
       hyprctl activewindow -j 2>/dev/null | python3 -c '
 import json, sys
@@ -247,8 +197,8 @@ esac
 # ========= COPY =========
 wl-copy < "$FILE"
 
-# ========= FEEDBACK (SwayNC Thumbnail) =========
-# O SwayNC processa nativamente o parâmetro -i como a prévia lateral se receber o caminho absoluto.
+# ========= FEEDBACK (notificação com miniatura) =========
+# Passa o caminho absoluto em -i para a notificação exibir a prévia.
 FILENAME=$(basename "$FILE")
 notify-send -i "$FILE" "Screenshot Capturada" "$MODE • $FILENAME"
 echo "Salvo em: $FILE"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Monitor de Bateria para o Cadroc (mango/Arch Linux)
+# Monitor de Bateria para o Cadroc (Arch Linux)
 # Rastreia ciclo de descarga desde desconexão até o limite configurado.
 
 STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/cadrocspace/battery"

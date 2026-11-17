@@ -8,8 +8,8 @@
 # — a unica variavel que o gtk.css usa. Sem esse arquivo o GTK reclama em todo
 # app: "Failed to import ... colors.css", e todo uso de @accent_color e ignorado.
 #
-# O accent vem do pywal (a cor mais saturada entre color1..color6, mesma regra do
-# swaync-colors.sh), entao acompanha o wallpaper junto com o resto do tema.
+# O accent vem do pywal (a cor mais saturada entre color1..color6), entao
+# acompanha o wallpaper junto com o resto do tema.
 #
 # O estado (ACCENT_COLOR/FONT_FAMILY/FONT_SIZE) vai para state/state.env pela
 # theme_save_state(), que e a fonte de verdade do cadroc_theme.sh.

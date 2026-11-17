@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Conta-gotas de cor com grim + slurp (wlroots, funciona no mangowm).
+# Conta-gotas de cor com grim + slurp (wlroots).
 # Sem dependência de pacotes do ecossistema Hyprland.
 # A notificação com preview fica aqui; o tema continua sendo gerado pelo
 # pipeline de paleta em ~/.config/scripts/run-scripts.sh.
