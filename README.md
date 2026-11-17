@@ -9,11 +9,11 @@
 
 ## Sobre
 
-Dotfiles **exclusivos do Hyprland**, com **Quickshell (cadrocbar)** e theming via **ruwall**.
+Dotfiles **exclusivos do Hyprland**, com **Quickshell ([cadrocbar](https://github.com/souandresouza/cadrocbar))** e theming via **[ruwall](https://github.com/souandresouza/ruwall)**.
 
 - Configuração do Hyprland em Lua (`hypr/`, compatível com 0.55+/0.57), `hyprlock` e `hypridle`.
-- Barra, launcher, popups e notificações em **Quickshell/cadrocbar** (`quickshell/` + `quickshell-scripts/`).
-- Scripts/utilitários e pipeline de cores em `scripts/`, usando os projetos pessoais **ruwall** e **cadrocfile** quando aplicável.
+- Barra, launcher, popups e notificações em **Quickshell/[cadrocbar](https://github.com/souandresouza/cadrocbar)** (`quickshell/` + `quickshell-scripts/`).
+- Scripts/utilitários e pipeline de cores em `scripts/`, usando os projetos pessoais [ruwall](https://github.com/souandresouza/ruwall) e [cadrocfile](https://github.com/souandresouza/cadrocfile) quando aplicável.
 - Para **MangoWC**, use o repositório [cadrocspace](https://github.com/souandresouza/cadrocspace).
 
 ## Estrutura
@@ -78,8 +78,8 @@ Efetue logout e entre novamente na sessão do Hyprland.
 
 ## Workflow de cores
 
-- `random-wallpaper.sh` aplica o wallpaper (swaybg) e aciona `scripts/run-scripts.sh`, que gera a paleta com **`ruwall`** (`~/.cache/wal/*`) e atualiza os temas dos apps.
+- `random-wallpaper.sh` aplica o wallpaper (swaybg) e aciona `scripts/run-scripts.sh`, que gera a paleta com **[`ruwall`](https://github.com/souandresouza/ruwall)** (`~/.cache/wal/*`) e atualiza os temas dos apps.
 - Para o **Hyprland**, `hypr/scripts/hypr-colors.sh` lê `~/.cache/wal/colors.css` e atualiza `hypr/config/colors.lua`. O `scripts/run-scripts.sh` também regenera o `hyprlock.conf` via `scripts/colors/update-hyprlock.sh` (texto sempre branco).
 - `select-wallpaper.sh` seleciona/aplica o wallpaper e chama o mesmo `run-scripts.sh`, mantendo paleta e temas em sincronia.
 
-> Usa os projetos pessoais **`ruwall`** (geração de paleta) e **`cadrocfile`**/**quickshell** (cadrocbar) como base do fluxo. Scripts exclusivos do Hyprland ficam em `hypr/scripts/`.
+> Usa os projetos pessoais **[`ruwall`](https://github.com/souandresouza/ruwall)** (geração de paleta) e **[`cadrocfile`](https://github.com/souandresouza/cadrocfile)**/**quickshell** ([cadrocbar](https://github.com/souandresouza/cadrocbar)) como base do fluxo. Scripts exclusivos do Hyprland ficam em `hypr/scripts/`.

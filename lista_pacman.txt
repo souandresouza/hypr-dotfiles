@@ -1,7 +1,7 @@
 # ============================================================
 # Hyprland + Quickshell - pacotes essenciais
-# Obs: theming via ruwall (~/.cache/wal -> colors.css);
-# a barra/toasts/notificações são do cadrocbar (Quickshell).
+# Obs: theming via ruwall (https://github.com/souandresouza/ruwall) (~/.cache/wal -> colors.css);
+# a barra/toasts/notificações são do cadrocbar (https://github.com/souandresouza/cadrocbar) (Quickshell).
 # mako, waybar e matugen NÃO são usados.
 # ============================================================
 
