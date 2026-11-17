@@ -36,6 +36,29 @@ extract_color() {
     grep -- "--${key}:" "$COLORS_FILE" 2>/dev/null | head -1 | awk -F': ' '{print $2}' | tr -d '; '
 }
 
+# Converte #rrggbb para o formato aceito pelo hyprlock (o "#" inicia comentário)
+hex_to_rgba() {
+    local hex="${1#\#}"
+    if [ "${#hex}" -eq 3 ]; then
+        hex="${hex:0:1}${hex:0:1}${hex:1:1}${hex:1:1}${hex:2:1}${hex:2:1}"
+    fi
+    if ! [[ "$hex" =~ ^[0-9a-fA-F]{6}$ ]]; then
+        echo "rgba(255, 255, 255, 1.0)"
+        return
+    fi
+    printf 'rgba(%d, %d, %d, 1.0)' "0x${hex:0:2}" "0x${hex:2:2}" "0x${hex:4:2}"
+}
+
+# Luminância aproximada (0-255) para checar contraste
+hex_luma() {
+    local hex="${1#\#}"
+    if [ "${#hex}" -eq 3 ]; then
+        hex="${hex:0:1}${hex:0:1}${hex:1:1}${hex:1:1}${hex:2:1}${hex:2:1}"
+    fi
+    [[ "$hex" =~ ^[0-9a-fA-F]{6}$ ]] || { echo 0; return; }
+    echo $(( (0x${hex:0:2} * 299 + 0x${hex:2:2} * 587 + 0x${hex:4:2} * 114) / 1000 ))
+}
+
 # Cores padrão
 inner_color="#c8c8c8"
 border_color="#111111"
@@ -44,22 +67,40 @@ accent2_color="#01ee8f"
 font_color="#ffffff"
 
 if [ -f "$COLORS_FILE" ]; then
-    bg="$(extract_color background)"
     fg="$(extract_color foreground)"
     c0="$(extract_color color0)"
-    c1="$(extract_color color1)"
     c4="$(extract_color color4)"
+    c5="$(extract_color color5)"
     c6="$(extract_color color6)"
     c15="$(extract_color color15)"
 
     [ -n "$c0" ] && inner_color="$c0"
     [ -n "$c15" ] && border_color="$c15"
-    [ -n "$c4" ] && accent_color="$c4"
-    [ -n "$c6" ] && accent2_color="$c6"
     [ -n "$fg" ] && font_color="$fg"
+
+    # Escolhe um accent que tenha contraste suficiente sobre o fundo do campo
+    bg_luma="$(hex_luma "$inner_color")"
+    for cand in "$c5" "$c4" "$c6" "$fg"; do
+        [ -n "$cand" ] || continue
+        cand_luma="$(hex_luma "$cand")"
+        diff=$(( cand_luma > bg_luma ? cand_luma - bg_luma : bg_luma - cand_luma ))
+        if [ "$diff" -ge 60 ]; then
+            accent_color="$cand"
+            break
+        fi
+    done
+
+    # accent2 usa a cor de texto (contrasta com o fundo) quando disponível
+    [ -n "$fg" ] && accent2_color="$fg"
 fi
 
-gradient="${accent_color}, ${accent2_color} 45deg"
+inner_color="$(hex_to_rgba "$inner_color")"
+border_color="$(hex_to_rgba "$border_color")"
+accent_color="$(hex_to_rgba "$accent_color")"
+accent2_color="$(hex_to_rgba "$accent2_color")"
+font_color="$(hex_to_rgba "$font_color")"
+
+gradient="$accent_color $accent2_color 45deg"
 
 # Cria o diretório de configuração do hyprlock se não existir
 mkdir -p "$(dirname "$HYPRLOCK_CONF")"
@@ -81,8 +122,8 @@ gradient = $gradient
 
 general {
     ignore_empty_input = true
-    grace = 0
     hide_cursor = true
+    fail_timeout = 300
 }
 
 # Background
@@ -201,7 +242,6 @@ input-field {
     check_color = $accent2_color
     fail_color = rgb(204,34,34)
     fail_text = <i>\$FAIL <b>(\$ATTEMPTS)</b></i>
-    fail_transition = 300
     capslock_color = $accent_color
     numlock_color = -1
     bothlock_color = -1
