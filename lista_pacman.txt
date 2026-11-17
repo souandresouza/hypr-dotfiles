@@ -47,8 +47,7 @@ quickshell
 # --- Aplicativos usados pelos binds (terminal/desktop) ---
 kitty
 fuzzel # seletor de emoji (SUPER+U)
-firefox
-thunar
+yazi
 telegram-desktop
 btop
 scrcpy
@@ -60,12 +59,18 @@ wl-clipboard
 grim
 slurp
 satty
+imv # grade de miniaturas do select-wallpaper.sh
+tesseract # OCR do screenshot.sh
+zbar # leitura de QR do screenshot.sh
+wget # download do qr.sh
+wl-screenrec # gravador padrão do record.sh
 brightnessctl
 wlsunset
 geoclue
 imagemagick
 ffmpeg
 gpu-screen-recorder
+localsend
 zenity
 qrencode
 jq

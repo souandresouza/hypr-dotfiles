@@ -65,6 +65,12 @@ for app in "${apps[@]}"; do
     run_color "$app"
 done
 
+# O hyprlock usa um gerador próprio (nome fora do padrão <app>-colors.sh).
+if [[ -x "$COLOR_DIR/update-hyprlock.sh" ]]; then
+    "$COLOR_DIR/update-hyprlock.sh" >/dev/null ||
+        echo "run-scripts: aviso: update-hyprlock.sh falhou" >&2
+fi
+
 # Opcionais: só rodam quando o app/tema correspondente está presente.
 if [[ -f "$HOME/.config/qBittorrent/themes/pywal/stylesheet.qss.tpl" ]]; then
     run_color qbittorrent

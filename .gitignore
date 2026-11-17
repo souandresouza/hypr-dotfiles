@@ -1,2 +1,3 @@
 # Caches/artefatos locais
 *.log
+__pycache__/

@@ -15,8 +15,10 @@ TESSDATA_USER="$HOME/.local/share/tesseract/tessdata"
 
 # ========= DETECT COMPOSITOR =========
 detect_compositor() {
-  if command -v mango >/dev/null 2>&1; then
+  if command -v mango >/dev/null 2>&1 && [[ -n "$(pgrep -x mango 2>/dev/null)" ]]; then
     echo "mango"
+  elif command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
+    echo "hyprland"
   else
     echo "unknown"
   fi
@@ -74,6 +76,23 @@ w, h = int(d["width"]), int(d["height"])
 if w <= 0 or h <= 0:
     sys.exit(1)
 print("%d,%d %dx%d" % (int(d["x"]), int(d["y"]), w, h))
+' 2>/dev/null
+      ;;
+    hyprland)
+      hyprctl activewindow -j 2>/dev/null | python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
+if not isinstance(d, dict) or not d or d.get("mapped") is False:
+    sys.exit(1)
+at = d.get("at") or [0, 0]
+size = d.get("size") or [0, 0]
+w, h = int(size[0]), int(size[1])
+if w <= 0 or h <= 0:
+    sys.exit(1)
+print("%d,%d %dx%d" % (int(at[0]), int(at[1]), w, h))
 ' 2>/dev/null
       ;;
     *)

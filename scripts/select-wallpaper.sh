@@ -99,8 +99,8 @@ main() {
         update_history "$chosen"
         cp "$chosen" "$CURRENT_WALLPAPER" 2>/dev/null || true
 
-        # Regenera o tema de cores baseado no wallpaper
-        ruwall -i "$chosen" >/dev/null 2>&1 || true
+        # Regenera a paleta e o tema dos apps com base no wallpaper escolhido
+        "$HOME/.config/scripts/run-scripts.sh" "$chosen" >/dev/null 2>&1 || true
 
         notify-send "Wallpaper" "$(basename "$chosen")" -i "$chosen" 2>/dev/null || true
     else

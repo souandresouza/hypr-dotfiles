@@ -248,5 +248,7 @@ main() {
     echo "✨ Concluído!" >&2
 }
 
-# Executa
-main "$@"
+# Executa somente quando chamado diretamente (select-wallpaper.sh faz source)
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi

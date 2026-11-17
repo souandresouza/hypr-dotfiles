@@ -1,5 +1,5 @@
 local terminal = "kitty"
-local browser = "firefox"
+local browser = "brave"
 local fileManager = "cadrocfile"
 local cadrocbar_ipc = "qs -c cadrocbar ipc call"
 local restart_quickshell = "killall quickshell && quickshell -c cadrocbar & "
@@ -16,7 +16,7 @@ hl.bind("SUPER + T", hl.dsp.exec_cmd("Telegram"),{ description = "telegram" })
 hl.bind("SUPER + U", hl.dsp.exec_cmd("res=$(fuzzel --dmenu --prompt='Emoji: ' < $HOME/.config/hypr/emoji-list.txt | awk '{print $1}') && [ -n \"$res\" ] && echo -n \"$res\" | wl-copy"),{ description = "emoji selector" })
 hl.bind("SUPER + W", hl.dsp.exec_cmd("kitty --class btop -e btop"),{ description = "btop" })
 hl.bind("SUPER + X", hl.dsp.exec_cmd("kitty -e scrcpy"),{ description = "scrcpy" })
-hl.bind("SUPER + Y", hl.dsp.exec_cmd("kitty --class elio -e elio"),{ description = "elio" })
+hl.bind("SUPER + Y", hl.dsp.exec_cmd("kitty --class yazi -e yazi"),{ description = "yazi" })
 hl.bind("SUPER + P", hl.dsp.exec_cmd("kitty -e nmtui"),{ description = "nmtui" })
 hl.bind("SUPER + SHIFT + A", hl.dsp.exec_cmd("kitty -e bluetui"),{ description = "bluetui" })
 hl.bind("SUPER + O", hl.dsp.exec_cmd("wineserver -k"),{ description = "close wine" })
