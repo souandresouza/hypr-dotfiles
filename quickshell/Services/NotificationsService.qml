@@ -2,6 +2,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 import Quickshell.Wayland
 import qs.Common
@@ -41,18 +42,18 @@ Singleton {
 		return false;
 	}
 
-property bool dndManual: false
+	property bool dndManual: false
 	property bool dndFullscreen: true
-	property bool fullscreenActive: false
+	readonly property bool fullscreenActive: Hyprland.activeToplevel ? Hyprland.activeToplevel.fullscreen : false
 
 	onDndManualChanged: root.writeState()
 	onDndFullscreenChanged: root.writeState()
 
-	readonly property string stateFile: "$HOME/.local/state/quickshell/notifications.state"
+	readonly property string stateFile: Quickshell.env("XDG_STATE_HOME", "$HOME/.local/state") + "/quickshell/notifications.state"
 
 	function writeState() {
 		stateProc.exec(["sh", "-c",
-			"mkdir -p $HOME/.local/state/quickshell && " +
+			"mkdir -p " + Quickshell.env("XDG_STATE_HOME", "$HOME/.local/state") + "/quickshell && " +
 			"printf 'dndManual=%s\ndndFullscreen=%s\n' " +
 			(root.dndManual ? "true" : "false") + " " +
 			(root.dndFullscreen ? "true" : "false") + " > " + root.stateFile]);
@@ -87,28 +88,6 @@ property bool dndManual: false
 		if (root.dndFullscreen && root.fullscreenActive)
 			return record.urgency === "critical";
 		return true;
-	}
-
-	Process {
-		id: fullscreenProbe
-		stdout: StdioCollector {
-			id: fsColl
-			waitForEnd: true
-		}
-		onExited: () => {
-			const raw = fsColl.text.toString().trim();
-			let fs = 0;
-			if (raw.length > 0 && raw.startsWith("{")) {
-				try {
-					fs = Number(JSON.parse(raw).fullscreen) || 0;
-				} catch (e) { /* ignore */ }
-			}
-			root.fullscreenActive = fs !== 0;
-		}
-	}
-
-	function probeFullscreen() {
-		fullscreenProbe.exec(["hyprctl", "-j", "activewindow"]);
 	}
 
 	function flushMuted() {
@@ -318,16 +297,8 @@ time: now,
 		onTriggered: root.sweep()
 	}
 
-	Timer {
-		interval: 1500
-		repeat: true
-		running: root.dndFullscreen
-		onTriggered: root.probeFullscreen()
-	}
-
 	Component.onCompleted: {
 		stateProc.exec(["sh", "-c", "cat " + root.stateFile + " 2>/dev/null"]);
-		root.probeFullscreen();
 	}
 
 	IpcHandler {

@@ -20,9 +20,9 @@ Singleton {
 
 	property bool fallbackActive: false
 
-	readonly property string homeDir: Quickshell.env("HOME") || "/home/andre"
-	readonly property string wallpaperUrl: "file://" + homeDir + "/.cache/current_wallpaper.png"
-	readonly property string avatarUrl: "file://" + homeDir + "/Documentos/user.png"
+	readonly property string homeDir: Quickshell.env("HOME") || ""
+	readonly property string wallpaperUrl: "file://" + lockservice.homeDir + "/.cache/current_wallpaper.png"
+	readonly property string avatarUrl: "file://" + lockservice.homeDir + "/.config/cadrocbar/avatar.png"
 
 	readonly property var weekdayNames: [
 		"domingo", "segunda-feira", "terça-feira", "quarta-feira",
@@ -303,6 +303,7 @@ Singleton {
 
 					Rectangle {
 						id: avatarBox
+						visible: avatarImage.status === Image.Ready
 						anchors.right: enterButton.left
 						anchors.rightMargin: 12
 						anchors.verticalCenter: parent.verticalCenter

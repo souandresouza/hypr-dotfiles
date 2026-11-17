@@ -10,13 +10,9 @@ ModuleButton {
 
 	active: popup ? popup.open : false
 
-	readonly property string glyph: {
-		if (NetworkService.state === 1)
-			return "\uf1eb";
-		if (NetworkService.state === 2)
-			return "\uf6ff";
-		return "\uf05aa";
-	}
+	contentCentered: true
+
+	readonly property string glyph: ""
 
 	IconText {
 		glyph: root.glyph
@@ -25,7 +21,7 @@ ModuleButton {
 			: NetworkService.state === 2 ? "eth" : ""
 		glyphColor: root.active ? Theme.accent : NetworkService.state === 0 ? Theme.sage : Theme.fg
 		textColor: Theme.fg
-		maxTextWidth: 150
+		maxTextWidth: 220
 	}
 
 	onClicked: {

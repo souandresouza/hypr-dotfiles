@@ -9,8 +9,6 @@ Item {
 
 	property real sf: 1
 
-	readonly property string networkGlyph:
-		NetworkService.state === 2 ? "\uf6ff" : NetworkService.state === 1 ? "\uf1eb" : "\uf05aa"
 	readonly property string volumeGlyph: {
 		if (AudioService.muted || AudioService.volume === 0)
 			return "\uf026";
@@ -19,163 +17,200 @@ Item {
 		return "\uf028";
 	}
 
-	Flickable {
-		id: scroll
+	Column {
 		anchors.fill: parent
-		clip: true
-		contentWidth: parent.width
-		contentHeight: marginWrap.height
-		boundsBehavior: Flickable.StopAtBounds
+		spacing: Theme.roundScaled(6, root.sf)
+		topPadding: Theme.roundScaled(12, root.sf)
+		bottomPadding: Theme.roundScaled(12, root.sf)
+		leftPadding: Theme.roundScaled(16, root.sf)
+		rightPadding: Theme.roundScaled(16, root.sf)
 
 		Item {
-			id: marginWrap
-			x: Theme.roundScaled(20, root.sf)
-			width: parent.width - Theme.roundScaled(40, root.sf)
-			height: column.implicitHeight
+			id: netRow
+			width: parent.width
+			height: Theme.roundScaled(28, root.sf)
 
-			Column {
-				id: column
-				width: parent.width
+			RowLayout {
+				anchors.fill: parent
 				spacing: Theme.roundScaled(10, root.sf)
-				topPadding: Theme.roundScaled(8, root.sf)
-				bottomPadding: Theme.roundScaled(12, root.sf)
 
 				Text {
-					text: "CENTRAL"
+					text: NetworkService.state === 2 ? "\uf6ff"
+						: NetworkService.state === 1 ? "\uf1eb" : "\uf05aa"
 					font.family: Theme.fontFamily
-					font.pixelSize: Theme.roundScaled(Theme.fontSizeSmall, root.sf)
-					color: Theme.sage
-					height: Theme.roundScaled(16, root.sf)
-					verticalAlignment: Text.AlignVCenter
+					font.pixelSize: Theme.roundScaled(Theme.iconSize, root.sf)
+					color: NetworkService.state === 0 ? Theme.sage : Theme.fg
+					Layout.alignment: Qt.AlignVCenter
 				}
 
-				Item {
-					id: netLink
-					width: parent.width
-					height: Theme.roundScaled(40, root.sf)
-
-					RowLayout {
-						anchors.fill: parent
-						spacing: Theme.roundScaled(10, root.sf)
-
-						Text {
-							text: root.networkGlyph
-							font.family: Theme.fontFamily
-							font.pixelSize: Theme.roundScaled(Theme.iconSize, root.sf)
-							color: NetworkService.state === 0 ? Theme.sage : Theme.fg
-							Layout.alignment: Qt.AlignVCenter
-						}
-
-						Text {
-							text: "Rede"
-							font.family: Theme.fontFamily
-							font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
-							font.weight: Font.Bold
-							color: Theme.fg
-							Layout.alignment: Qt.AlignVCenter
-							Layout.fillWidth: true
-						}
-
-						Text {
-							text: "\uf054"
-							font.family: Theme.fontFamily
-							font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
-							color: Theme.stone
-							Layout.alignment: Qt.AlignVCenter
-						}
-					}
-
-					MouseArea {
-						anchors.fill: parent
-						hoverEnabled: true
-						cursorShape: Qt.PointingHandCursor
-						onClicked: {
-							const p = PopupService.network;
-							if (p)
-								p.toggleFrom(netLink);
-						}
-					}
+				Text {
+					text: "Rede"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					font.weight: Font.Bold
+					color: Theme.fg
+					Layout.alignment: Qt.AlignVCenter
+					Layout.fillWidth: true
 				}
 
-				ToggleRow {
-					width: parent.width
-					sf: root.sf
-					glyph: "\uf294"
-					label: "Bluetooth"
-					value: BluetoothService.powered
-						? (BluetoothService.connected > 0
-							? BluetoothService.connected + " conectado(s)"
-							: "Ligado")
-						: "Desligado"
-					glyphColor: BluetoothService.powered ? Theme.accent : Theme.sage
-					active: BluetoothService.powered
-					onToggled: BluetoothService.togglePower()
+				Text {
+					text: NetworkService.state === 1
+						? NetworkService.ssid + "  " + NetworkService.signal + "%"
+						: NetworkService.state === 2 ? "eth" : "offline"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					color: Theme.stone
+					Layout.alignment: Qt.AlignVCenter
+					elide: Text.ElideRight
+				}
+			}
+		}
+
+		Item {
+			id: volRow
+			width: parent.width
+			height: Theme.roundScaled(28, root.sf)
+
+			RowLayout {
+				anchors.fill: parent
+				spacing: Theme.roundScaled(10, root.sf)
+
+				Text {
+					text: root.volumeGlyph
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.iconSize, root.sf)
+					color: AudioService.muted ? Theme.sage : Theme.fg
+					Layout.alignment: Qt.AlignVCenter
 				}
 
-				SliderRow {
-					width: parent.width
-					sf: root.sf
-					glyph: root.volumeGlyph
-					label: "Volume"
-					glyphColor: AudioService.muted ? Theme.sage : Theme.fg
-					value: AudioService.volume
-					onChanged: (v) => {
-						if (v === 0) {
-							if (!AudioService.muted)
-								AudioService.toggleMute();
-						} else {
-							AudioService.setVolume(v);
-							if (AudioService.muted)
-								AudioService.toggleMute();
-						}
-					}
+				Text {
+					text: "Volume"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					font.weight: Font.Bold
+					color: Theme.fg
+					Layout.alignment: Qt.AlignVCenter
+					Layout.fillWidth: true
 				}
 
-				SliderRow {
-					width: parent.width
-					sf: root.sf
-					glyph: "\uf185"
-					label: "Brilho"
-					value: BacklightService.percent
-					enabled: BacklightService.available
-					visible: BacklightService.available
-					onChanged: (v) => BacklightService.set(v)
+				Text {
+					text: AudioService.muted ? "MUT " + AudioService.volume + "%" : AudioService.volume + "%"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					color: AudioService.muted ? Theme.sage : Theme.stone
+					Layout.alignment: Qt.AlignVCenter
+				}
+			}
+		}
+
+		Item {
+			id: briRow
+			width: parent.width
+			height: Theme.roundScaled(28, root.sf)
+			visible: BacklightService.available
+
+			RowLayout {
+				anchors.fill: parent
+				spacing: Theme.roundScaled(10, root.sf)
+
+				Text {
+					text: "\uf185"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.iconSize, root.sf)
+					color: Theme.fg
+					Layout.alignment: Qt.AlignVCenter
 				}
 
-				StatRow {
-					width: parent.width
-					sf: root.sf
-					label: "CPU"
-					value: SystemStats.cpu + "%"
-					percent: SystemStats.cpu / 100
-					barColor: SystemStats.cpu >= 90 ? Theme.danger : Theme.accent
+				Text {
+					text: "Brilho"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					font.weight: Font.Bold
+					color: Theme.fg
+					Layout.alignment: Qt.AlignVCenter
+					Layout.fillWidth: true
 				}
 
-				StatRow {
-					width: parent.width
-					sf: root.sf
-					label: "GPU"
-					value: SystemStats.gpu + "%"
-					percent: SystemStats.gpu / 100
-					barColor: SystemStats.gpu >= 90 ? Theme.danger : Theme.accentSoft
+				Text {
+					text: BacklightService.percent + "%"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					color: Theme.stone
+					Layout.alignment: Qt.AlignVCenter
+				}
+			}
+		}
+
+		Item {
+			id: memRow
+			width: parent.width
+			height: Theme.roundScaled(28, root.sf)
+
+			RowLayout {
+				anchors.fill: parent
+				spacing: Theme.roundScaled(10, root.sf)
+
+				Text {
+					text: "\uf085"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.iconSize, root.sf)
+					color: SystemStats.memPct >= 90 ? Theme.danger : Theme.fg
+					Layout.alignment: Qt.AlignVCenter
 				}
 
-				StatRow {
-					width: parent.width
-					sf: root.sf
-					label: "MEM"
-					value: SystemStats.memUsedMb + " / " + SystemStats.memTotalMb + " MiB"
-					percent: SystemStats.memPct / 100
-					barColor: SystemStats.memPct >= 90 ? Theme.danger : Theme.accentSoft
+				Text {
+					text: "Memória"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					font.weight: Font.Bold
+					color: Theme.fg
+					Layout.alignment: Qt.AlignVCenter
+					Layout.fillWidth: true
 				}
 
-				StatRow {
-					width: parent.width
-					sf: root.sf
-					label: "TEMP"
-					value: SystemStats.temp + "°C"
-					percent: SystemStats.temp / 100
-					barColor: SystemStats.temp >= 80 ? Theme.danger : Theme.olive
+				Text {
+					text: SystemStats.memPct + "%"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					color: SystemStats.memPct >= 90 ? Theme.danger : Theme.stone
+					Layout.alignment: Qt.AlignVCenter
+				}
+			}
+		}
+
+		Item {
+			id: cpuRow
+			width: parent.width
+			height: Theme.roundScaled(28, root.sf)
+
+			RowLayout {
+				anchors.fill: parent
+				spacing: Theme.roundScaled(10, root.sf)
+
+				Text {
+					text: "\uf2db"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.iconSize, root.sf)
+					color: SystemStats.cpu >= 90 ? Theme.danger : Theme.fg
+					Layout.alignment: Qt.AlignVCenter
+				}
+
+				Text {
+					text: "CPU"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					font.weight: Font.Bold
+					color: Theme.fg
+					Layout.alignment: Qt.AlignVCenter
+					Layout.fillWidth: true
+				}
+
+				Text {
+					text: SystemStats.cpu + "%"
+					font.family: Theme.fontFamily
+					font.pixelSize: Theme.roundScaled(Theme.fontSize, root.sf)
+					color: SystemStats.cpu >= 90 ? Theme.danger : Theme.stone
+					Layout.alignment: Qt.AlignVCenter
 				}
 			}
 		}

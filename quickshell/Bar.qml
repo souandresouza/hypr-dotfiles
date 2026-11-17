@@ -95,19 +95,19 @@ Item {
 				}
 			}
 
-			Row {
-				id: rightSection
-				spacing: Theme.moduleSpacing
-				anchors.right: parent.right
-				anchors.rightMargin: 8
-				anchors.verticalCenter: parent.verticalCenter
+Row {
+					id: rightSection
+					spacing: Theme.moduleSpacing
+					anchors.right: parent.right
+					anchors.rightMargin: 8
+					anchors.verticalCenter: parent.verticalCenter
 
+					Weather {}
+					Audio {}
+					Backlight {}
 					PowerMenu { popup: powerMenuPopup }
+					Clipboard { popup: clipboardPopup }
 					Lock {}
-					IdleInhibitor {}
-					Network { popup: networkPopup }
-					ControlCenter { popup: controlCenterPopup }
-					Notifications { popup: notificationsPopup }
 					PowerProfile {}
 					Battery {}
 			}
@@ -134,35 +134,6 @@ Item {
 	}
 
 	PopoutBase {
-		id: controlCenterPopup
-		screen: barRoot.screen
-		popupHeight: 460
-		content: Component {
-			ControlCenterPopup {}
-		}
-	}
-
-	PopoutBase {
-		id: networkPopup
-		screen: barRoot.screen
-		popupWidth: 360
-		popupHeight: 640
-		content: Component {
-			NetworkPopup {}
-		}
-	}
-
-	PopoutBase {
-		id: notificationsPopup
-		screen: barRoot.screen
-		popupWidth: 380
-		popupHeight: 420
-		content: Component {
-			NotificationsPopup {}
-		}
-	}
-
-	PopoutBase {
 		id: powerMenuPopup
 		screen: barRoot.screen
 		popupWidth: 220
@@ -172,8 +143,18 @@ Item {
 		}
 	}
 
+	PopoutBase {
+		id: clipboardPopup
+		screen: barRoot.screen
+		popupWidth: 620
+		popupHeight: 400
+		content: Component {
+			ClipboardPopup {}
+		}
+	}
+
 	function closeOtherPopouts(except) {
-		const all = [calendarPopup, mediaPopup, controlCenterPopup, networkPopup, powerMenuPopup, notificationsPopup];
+		const all = [calendarPopup, mediaPopup, powerMenuPopup, clipboardPopup];
 		for (const p of all) {
 			if (p !== except)
 				p.closePopup();
@@ -181,11 +162,10 @@ Item {
 	}
 
 	Component.onCompleted: {
-		PopupService.controlCenter = controlCenterPopup;
 		PopupService.media = mediaPopup;
 		PopupService.calendar = calendarPopup;
 		PopupService.powerMenu = powerMenuPopup;
-		PopupService.network = networkPopup;
+		PopupService.clipboard = clipboardPopup;
 	}
 
 	Connections {
@@ -199,27 +179,24 @@ Item {
 	}
 
 	Connections {
-		target: controlCenterPopup
-		function onOpened() { barRoot.closeOtherPopouts(controlCenterPopup) }
-	}
-
-	Connections {
-		target: networkPopup
-		function onOpened() { barRoot.closeOtherPopouts(networkPopup) }
-	}
-
-	Connections {
 		target: powerMenuPopup
 		function onOpened() { barRoot.closeOtherPopouts(powerMenuPopup) }
 	}
 
 	Connections {
-		target: notificationsPopup
-		function onOpened() { barRoot.closeOtherPopouts(notificationsPopup) }
+		target: powerMenuPopup.contentItem
+		function onActionTriggered() { powerMenuPopup.closePopup() }
 	}
 
 	Connections {
-		target: powerMenuPopup.contentItem
-		function onActionTriggered() { powerMenuPopup.closePopup() }
+		target: clipboardPopup
+		function onOpened() { barRoot.closeOtherPopouts(clipboardPopup) }
+	}
+
+	Connections {
+		target: clipboardPopup.contentItem
+		function onActionTriggered(action) {
+			clipboardPopup.closePopup();
+		}
 	}
 }

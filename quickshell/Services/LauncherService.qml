@@ -112,7 +112,8 @@ Singleton {
 		const argv = launcher.parseExec(entry.exec);
 		if (argv.length === 0)
 			argv.push(entry.name || "sh");
-		const args = entry.terminal ? ["kitty", "-e"].concat(argv) : argv;
+		const terminal = Quickshell.env("CADROCBAR_TERMINAL", "kitty");
+		const args = entry.terminal ? [terminal, "-e"].concat(argv) : argv;
 		Quickshell.execDetached(args);
 		launcher.close();
 	}
