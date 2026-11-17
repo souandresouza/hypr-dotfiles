@@ -76,7 +76,9 @@ if [ -f "$COLORS_FILE" ]; then
 
     [ -n "$c0" ] && inner_color="$c0"
     [ -n "$c15" ] && border_color="$c15"
-    [ -n "$fg" ] && font_color="$fg"
+
+    # Texto sempre branco (pedido do usuário), independe do wallpaper
+    font_color="#ffffff"
 
     # Escolhe um accent que tenha contraste suficiente sobre o fundo do campo
     bg_luma="$(hex_luma "$inner_color")"
@@ -181,7 +183,7 @@ label {
 label {
     monitor =
     text = cmd[update:1000] date +"%H:"
-    color = $border_color
+    color = $font_color
     shadow_size = 3
     shadow_color = rgb(0,0,0)
     shadow_boost = 1.2
@@ -197,7 +199,7 @@ label {
 label {
     monitor =
     text = cmd[update:1000] date +"%M:"
-    color = $accent_color
+    color = $font_color
     font_size = 200
     font_family = $font_family
     position = 10, -15
@@ -210,7 +212,7 @@ label {
 label {
     monitor =
     text = cmd[update:1000] date +"%S"
-    color = $border_color
+    color = $font_color
     shadow_size = 3
     shadow_color = rgb(0,0,0)
     shadow_boost = 1.2
