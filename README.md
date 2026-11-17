@@ -74,12 +74,12 @@ O `install.sh` verifica as dependências (`git`, `curl`, `yay`), copia `hypr/`, 
 
 Efetue logout e entre novamente na sessão do Hyprland.
 
-> 💡 As configurações são instaladas por **cópia**, não por link simbólico. Para modificar, edite em `~/.config/` e mantenha este repositório atualizado (ou edite direto aqui).
+> 💡 As configurações são instaladas por **cópia**, não por link simbólico. Para modificar, edite em `~/.config/` e rode `./sync.sh` para espelhar `hypr/`, `scripts/`, `quickshell/` e `quickshell-scripts/` no repositório (scripts exclusivos do ambiente local ficam de fora). Use `./sync.sh -n` para simular.
 
 ## Workflow de cores
 
 - `random-wallpaper.sh` aplica o wallpaper (swaybg) e aciona `scripts/run-scripts.sh`, que gera a paleta com **`ruwall`** (`~/.cache/wal/*`) e atualiza os temas dos apps.
-- Para o **Hyprland**, `hypr/scripts/hypr-colors.sh` lê `~/.cache/wal/colors.css` e atualiza `hypr/config/colors.lua`, e `scripts/colors/update-hyprlock.sh` pode regenerar o `hyprlock.conf` com base no wallpaper/cores.
-- `select-wallpaper.sh` (quando usado) seleciona/aplica wallpaper e regenera a paleta com `ruwall`.
+- Para o **Hyprland**, `hypr/scripts/hypr-colors.sh` lê `~/.cache/wal/colors.css` e atualiza `hypr/config/colors.lua`. O `scripts/run-scripts.sh` também regenera o `hyprlock.conf` via `scripts/colors/update-hyprlock.sh` (texto sempre branco).
+- `select-wallpaper.sh` seleciona/aplica o wallpaper e chama o mesmo `run-scripts.sh`, mantendo paleta e temas em sincronia.
 
 > Usa os projetos pessoais **`ruwall`** (geração de paleta) e **`cadrocfile`**/**quickshell** (cadrocbar) como base do fluxo. Scripts exclusivos do Hyprland ficam em `hypr/scripts/`.
