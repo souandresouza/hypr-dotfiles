@@ -127,7 +127,7 @@ label {
 # DATE
 label {
     monitor =
-    text = cmd[update:18000000] echo "<b> \$(date +'%A, %-d %B %Y') </b>"
+    text = cmd[update:60000] LC_TIME=pt_BR.UTF-8 date +"<b> %A, %-d %B %Y </b>"
     color = $font_color
     font_size = 30
     font_family = $font_family
